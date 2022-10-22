@@ -1,11 +1,8 @@
 import 'dart:math';
 
 class Game {
-  int colorsAvailable = 8;
-  int colorNumber = 4;
-  int rows = 10;
-  bool win = false;
-  bool end = false;
+  late int rows, colorNumber, colorsAvailable;
+  late bool win, end;
   List<int> correctSequence = [];
   int nGuesses = 0;
   List<List<int>> guesses = [];
@@ -17,7 +14,6 @@ class Game {
       this.rows = 10,
       this.colorsAvailable = 8,
       this.allowRepetition = false});
-  int completed = 0;
 
   void start() {
     // randomize the sequence
@@ -39,17 +35,7 @@ class Game {
     guesses = List.generate(
         rows, (_) => List.filled(colorNumber, 0, growable: false));
     index = 0;
-    completed = 0;
     guess = List.filled(colorNumber, 0);
-  }
-
-  void setColor(int c, int i) {
-    if (guess[i] == 0) ++completed;
-    guess[i] = c;
-  }
-
-  bool isCompleted() {
-    return completed == colorNumber;
   }
 
   bool isValid(List<int> guess) {
@@ -57,6 +43,48 @@ class Game {
       if (num == 0 || num > colorsAvailable) return false;
     }
     return true;
+  }
+
+  int getRows() {
+    return rows;
+  }
+
+  int getCol() {
+    return colorNumber;
+  }
+
+  int getAvailableColors() {
+    return colorsAvailable;
+  }
+
+  bool canAddRows(int n) {
+    return (rows + n >= 6 && rows + n <= 10);
+  }
+
+  bool canAddCol(int n) {
+    return (colorNumber + n >= 4 && colorNumber + n <= 6);
+  }
+
+  bool canAddColors(int n) {
+    return (colorsAvailable + n >= 4 && colorsAvailable + n <= 8);
+  }
+
+  void addRowsNum(int n) {
+    if (canAddRows(n)) {
+      rows += n;
+    }
+  }
+
+  void addColNum(int n) {
+    if (canAddCol(n)) {
+      colorNumber += n;
+    }
+  }
+
+  void addAvailColNum(int n) {
+    if (canAddColors(n)) {
+      colorsAvailable += n;
+    }
   }
 
   List<int> check(List<int> guess) {
@@ -92,7 +120,7 @@ class Game {
     if (nGuesses >= rows) {
       end = true;
     }
-    return [correctPlace, correct, colorNumber - correctPlace - correct];
+    return <int>[correctPlace, correct, colorNumber - correctPlace - correct];
   }
 
   List<int> showSequence() {

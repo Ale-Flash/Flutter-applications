@@ -33,7 +33,7 @@ class _MyHomePageState extends State<MyHomePage> {
           : Colors.black;
   late int colors, rows, selectedIntColor, editableRow;
   late Game game;
-  static const Color defaultColor = Colors.black;
+  static const Color defaultColor = Color.fromARGB(255, 39, 39, 39);
   late List<int> guessed;
   late List<List<int>> numColorsButtons;
   late List<List<Color>> resultsOfTry;
@@ -49,9 +49,9 @@ class _MyHomePageState extends State<MyHomePage> {
     Colors.pink,
   ];
   static const List<Color> showColor = [
-    Colors.green,
-    Colors.yellow,
-    Colors.red
+    Colors.red,
+    Colors.white,
+    Colors.black
   ];
 
   _MyHomePageState() {
@@ -90,14 +90,12 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     List<Widget> sideButtons = [];
     const empty = SizedBox();
-    // TODO SCEGLIERE ICONA Icons.circle
-    // const iconW = Icon(Icons.circle, color: Colors.white);
-    // const iconB = Icon(Icons.circle, color: Colors.black);
+    const double padding = 1.5;
 
     // buttons for color selector
     for (int i = 0; i < allColors.length; ++i) {
       sideButtons.add(Padding(
-        padding: const EdgeInsets.all(1),
+        padding: const EdgeInsets.all(padding),
         child: SizedBox(
             width: 50,
             height: 50,
@@ -122,20 +120,17 @@ class _MyHomePageState extends State<MyHomePage> {
     List<Widget> correctColors = [];
     for (int j = 0; j < colors; ++j) {
       correctColors.add(Padding(
-          padding: const EdgeInsets.all(1),
+          padding: const EdgeInsets.all(padding),
           child: SizedBox(
               width: 50,
               height: 50,
               child: Container(
-                  decoration: BoxDecoration(
-                    color: game.isEnd() ? allColors[game.showSequence()[j] - 1]
-                            : defaultColor,
-                    shape: BoxShape.circle
-                  ),
-              )
-          )
-        )
-      );
+                decoration: BoxDecoration(
+                    color: game.isEnd()
+                        ? allColors[game.showSequence()[j] - 1]
+                        : defaultColor,
+                    shape: BoxShape.circle),
+              ))));
     }
     column.add(Row(
         mainAxisSize: MainAxisSize.min,
@@ -147,7 +142,7 @@ class _MyHomePageState extends State<MyHomePage> {
       List<Widget> row = [];
       for (int j = 0; j < colors; ++j) {
         row.add(Padding(
-            padding: const EdgeInsets.all(1),
+            padding: const EdgeInsets.all(padding),
             child: SizedBox(
                 width: 50,
                 height: 50,
@@ -175,28 +170,19 @@ class _MyHomePageState extends State<MyHomePage> {
       List<Widget> smallButtons = List.generate(
           colors,
           (j) => Padding(
-            padding: const EdgeInsets.all(1),
-            child: 
-              SizedBox(
-                width: 10,
-                height: 10,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: resultsOfTry[i][j],
-                    shape: BoxShape.circle
-                  ),
-              )
-            ) 
-          )
-      );
+              padding: const EdgeInsets.all(1),
+              child: SizedBox(
+                  width: 10,
+                  height: 10,
+                  child: Container(
+                    decoration: BoxDecoration(
+                        color: resultsOfTry[i][j], shape: BoxShape.circle),
+                  ))));
 
-      row.add(Column(
-          children: [
-            Row(children: smallButtons.sublist(0, colors ~/ 2)),
-            Row(children: smallButtons.sublist(colors ~/ 2))
-          ]
-        )
-      );
+      row.add(Column(children: [
+        Row(children: smallButtons.sublist(0, colors ~/ 2)),
+        Row(children: smallButtons.sublist(colors ~/ 2))
+      ]));
 
       column.add(Row(
           mainAxisSize: MainAxisSize.min,
@@ -242,22 +228,40 @@ class _MyHomePageState extends State<MyHomePage> {
             }
           },
           backgroundColor: theme,
-          child: Icon(Icons.check, color: textColor),
+          child: Icon(game.isEnd() ? Icons.replay : Icons.check, color: textColor),
         ),
         body: Stack(children: [
           Align(
               alignment: const AlignmentDirectional(-1, 1),
               child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: sideButtons)),
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: sideButtons
+              )
+          ),
           Align(
               alignment: const AlignmentDirectional(0.25, -0.75),
-              child: Column(
+              child: Container(
+                /* TODO con un colore di sfondo: grigio scuretto
+                *          ______
+                *        /
+                *        | 
+                *        |
+                */
+                // padding: const EdgeInsets.only(right: 10, bottom: 10),
+                // decoration: BoxDecoration(
+                //   // border: Border(top: BorderSide(width: 3, color: theme), left: BorderSide(width: 3, color: theme)),
+                //   border: Border.all(width: 3, color: theme),
+                //   // shape: BoxShape.circle
+                // ),
+                child: Column(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: column))
+                  children: column
+              )
+            )
+          )
         ]));
   }
 }
