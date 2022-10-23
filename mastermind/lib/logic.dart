@@ -1,14 +1,10 @@
 import 'dart:math';
 
 class Game {
-  late int rows, colorNumber, colorsAvailable;
-  late bool win, end;
-  List<int> correctSequence = [];
-  int nGuesses = 0;
-  List<List<int>> guesses = [];
-  List<int> guess = [];
-  int index = 0;
-  bool allowRepetition = false;
+  late int rows, colorNumber, colorsAvailable, nGuesses, index;
+  late bool win, end, allowRepetition;
+  late List<int> correctSequence;
+  late List<List<int>> guesses;
   Game(
       {this.colorNumber = 4,
       this.rows = 10,
@@ -35,7 +31,6 @@ class Game {
     guesses = List.generate(
         rows, (_) => List.filled(colorNumber, 0, growable: false));
     index = 0;
-    guess = List.filled(colorNumber, 0);
   }
 
   bool isValid(List<int> guess) {
@@ -62,11 +57,15 @@ class Game {
   }
 
   bool canAddCol(int n) {
-    return (colorNumber + n >= 4 && colorNumber + n <= 6);
+    return (colorNumber + n >= 4 &&
+        colorNumber + n <= 6 &&
+        colorNumber + n <= colorsAvailable);
   }
 
   bool canAddColors(int n) {
-    return (colorsAvailable + n >= 4 && colorsAvailable + n <= 8);
+    return (colorsAvailable + n >= 4 &&
+        colorsAvailable + n <= 8 &&
+        colorNumber <= colorsAvailable + n);
   }
 
   void addRowsNum(int n) {
@@ -100,19 +99,26 @@ class Game {
     guesses[nGuesses++] = guess;
     int correct = 0;
     int correctPlace = 0;
-    Set<int> checked = correctSequence.toSet();
+    List<int> corrSeq = [...correctSequence];
+
     for (int i = 0; i < guess.length; ++i) {
-      if (guess[i] == correctSequence[i]) {
+      if (guess[i] == corrSeq[i]) {
+        guess[i] = 0;
+        corrSeq[i] = 0;
         ++correctPlace;
-        checked.remove(guess[i]);
       }
     }
-    for (int c in guess) {
-      if (checked.contains(c)) {
-        ++correct;
-        checked.remove(c);
+
+    for (int i = 0; i < guess.length; ++i) {
+      if (guess[i] == 0) continue;
+      for (int j = 0; j < corrSeq.length; ++j) {
+        if (guess[i] == corrSeq[j]) {
+          corrSeq[j] = 0;
+          ++correct;
+        }
       }
     }
+
     if (correctPlace == colorNumber) {
       win = true;
       end = true;

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'home.dart';
 import 'logic.dart';
 
-late Game game = Game(colorNumber: 4);
+Game game = Home.game;
 late Color theme = Colors.green;
 late Color disabledColor = Colors.grey;
 
@@ -30,7 +31,9 @@ class SettingsApp extends State<SettingsPage> {
                     (boolFunction(-1)) ? theme : disabledColor),
                 shape: MaterialStateProperty.all(const CircleBorder())),
             child: const Icon(Icons.remove)),
-        Padding(padding: const EdgeInsets.all(5), child: Text('${text()}', style: font)),
+        Padding(
+            padding: const EdgeInsets.all(5),
+            child: Text('${text()}', style: font)),
         ElevatedButton(
             onPressed: () {
               if (boolFunction(1)) {
@@ -55,22 +58,33 @@ class SettingsApp extends State<SettingsPage> {
           title: const Text('Settings'),
         ),
         body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            // mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+            child: Column(mainAxisSize: MainAxisSize.min,
+                // mainAxisAlignment: MainAxisAlignment.center,
+                children: [
               Text('Change number of rows', style: font),
-              changeSettingsLine(game.canAddRows, game.addRowsNum, game.getRows),
+              changeSettingsLine(
+                  game.canAddRows, game.addRowsNum, game.getRows),
               space,
               Text('Change number of column', style: font),
               changeSettingsLine(game.canAddCol, game.addColNum, game.getCol),
               space,
               Text('Change number of pickable colors', style: font),
-              changeSettingsLine(game.canAddColors, game.addAvailColNum, game.getAvailableColors),
+              changeSettingsLine(game.canAddColors, game.addAvailColNum,
+                  game.getAvailableColors),
               space,
-            ]
-        )
-      )
-    );
+              Text('Allow color repetition', style: font),
+              Switch(
+                // thumb color (round icon)
+                activeColor: theme,
+                activeTrackColor: theme,
+                inactiveThumbColor: disabledColor,
+                inactiveTrackColor: disabledColor,
+                splashRadius: 17,
+                // boolean variable value
+                value: game.allowRepetition,
+                // changes the state of the switch
+                onChanged: (value) => setState(() => game.allowRepetition = value),
+              ),
+            ])));
   }
 }

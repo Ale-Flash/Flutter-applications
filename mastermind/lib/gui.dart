@@ -1,22 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mastermind/logic.dart';
-
-// class MyApp extends StatelessWidget {
-//   const MyApp({super.key});
-//   static const MaterialColor theme = Colors.green;
-//   static final Color textColor =
-//       (theme.red * 0.3 + theme.green * 0.6 + theme.blue * 0.1) < 186
-//           ? Colors.white
-//           : Colors.black;
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       theme: ThemeData(primarySwatch: theme),
-//       home: const MyHomePage(title: 'Master Mind')
-//     );
-//   }
-// }
+import 'home.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, this.title = 'Master Mind'});
@@ -31,9 +15,9 @@ class _MyHomePageState extends State<MyHomePage> {
       (theme.red * 0.3 + theme.green * 0.6 + theme.blue * 0.1) < 186
           ? Colors.white
           : Colors.black;
-  late int colors, rows, selectedIntColor, editableRow;
-  late Game game;
-  static const Color defaultColor = Color.fromARGB(255, 39, 39, 39);
+  late int colors, rows, availableColors, selectedIntColor, editableRow;
+  Game game = Home.game;
+  static const Color defaultColor = Color.fromARGB(255, 27, 27, 27);
   late List<int> guessed;
   late List<List<int>> numColorsButtons;
   late List<List<Color>> resultsOfTry;
@@ -48,11 +32,7 @@ class _MyHomePageState extends State<MyHomePage> {
     Colors.indigo,
     Colors.pink,
   ];
-  static const List<Color> showColor = [
-    Colors.red,
-    Colors.white,
-    Colors.black
-  ];
+  static const List<Color> showColor = [Colors.red, Colors.white, Colors.black];
 
   _MyHomePageState() {
     initialize();
@@ -65,17 +45,13 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void initialize() {
-    rows = 10;
-    colors = 4;
+    rows = game.rows;
+    colors = game.colorNumber;
+    availableColors = game.colorsAvailable;
 
     editableRow = rows;
     selectedIntColor = 0;
     guessed = List.filled(colors, 0, growable: false);
-    game = Game(
-        colorNumber: colors,
-        rows: rows,
-        colorsAvailable: allColors.length,
-        allowRepetition: false);
 
     numColorsButtons = List.generate(
         rows, (_) => List.filled(colors, -1, growable: false),
@@ -93,7 +69,7 @@ class _MyHomePageState extends State<MyHomePage> {
     const double padding = 1.5;
 
     // buttons for color selector
-    for (int i = 0; i < allColors.length; ++i) {
+    for (int i = 0; i < availableColors; ++i) {
       sideButtons.add(Padding(
         padding: const EdgeInsets.all(padding),
         child: SizedBox(
@@ -104,10 +80,10 @@ class _MyHomePageState extends State<MyHomePage> {
                 selectedIntColor = i;
               }),
               style: ButtonStyle(
-                  backgroundColor:
-                      MaterialStatePropertyAll<Color>(allColors[i]),
-                  shape: MaterialStateProperty.all(const CircleBorder()),
-                  padding: MaterialStateProperty.all(const EdgeInsets.all(0))),
+                backgroundColor: MaterialStatePropertyAll<Color>(allColors[i]),
+                shape: MaterialStateProperty.all(const CircleBorder()),
+                padding: MaterialStateProperty.all(const EdgeInsets.all(0)),
+              ),
               child: selectedIntColor == i
                   ? (Icon(Icons.circle, color: betterColor(allColors[i])))
                   : empty,
@@ -122,8 +98,8 @@ class _MyHomePageState extends State<MyHomePage> {
       correctColors.add(Padding(
           padding: const EdgeInsets.all(padding),
           child: SizedBox(
-              width: 50,
-              height: 50,
+              width: game.colorNumber > 5 ? 45 : 50,
+              height: game.colorNumber > 5 ? 45 : 50,
               child: Container(
                 decoration: BoxDecoration(
                     color: game.isEnd()
@@ -132,10 +108,12 @@ class _MyHomePageState extends State<MyHomePage> {
                     shape: BoxShape.circle),
               ))));
     }
-    column.add(Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: correctColors));
+    column.add(Padding(
+        padding: const EdgeInsets.all(1),
+        child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: correctColors)));
 
     // selectable buttons for tries
     for (int i = 0; i < rows; ++i) {
@@ -144,8 +122,8 @@ class _MyHomePageState extends State<MyHomePage> {
         row.add(Padding(
             padding: const EdgeInsets.all(padding),
             child: SizedBox(
-                width: 50,
-                height: 50,
+                width: game.colorNumber > 5 ? 45 : 50,
+                height: game.colorNumber > 5 ? 45 : 50,
                 child: ElevatedButton(
                   onPressed: () => setState(() {
                     if (game.isEnd()) return;
@@ -172,22 +150,27 @@ class _MyHomePageState extends State<MyHomePage> {
           (j) => Padding(
               padding: const EdgeInsets.all(1),
               child: SizedBox(
-                  width: 10,
-                  height: 10,
+                  width: game.colorNumber > 5 ? 9 : 10,
+                  height: game.colorNumber > 5 ? 9 : 10,
                   child: Container(
                     decoration: BoxDecoration(
                         color: resultsOfTry[i][j], shape: BoxShape.circle),
                   ))));
-
-      row.add(Column(children: [
+      // row.add(const SizedBox(width: 1));
+      row.add(Column(children: <Widget>[
         Row(children: smallButtons.sublist(0, colors ~/ 2)),
         Row(children: smallButtons.sublist(colors ~/ 2))
       ]));
 
-      column.add(Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: row));
+      column.add(Container(
+          padding: const EdgeInsets.all(1),
+          decoration: BoxDecoration(
+              color: (i + 1 == editableRow) ? Colors.grey : Colors.transparent,
+              borderRadius: const BorderRadius.all(Radius.circular(5555))),
+          child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: row)));
     }
 
     // TODO PAGINA INIZIALE CON IMPOSTAZIONI
@@ -217,6 +200,7 @@ class _MyHomePageState extends State<MyHomePage> {
             }
             if (index != -1 && game.isValid(guessed)) {
               --editableRow;
+              // add the colors of the small results buttons
               List<int> res = game.check(guessed);
               int pos = 0;
               for (int i = 0; i < res.length; ++i) {
@@ -224,43 +208,64 @@ class _MyHomePageState extends State<MyHomePage> {
                   resultsOfTry[editableRow][pos++] = showColor[i];
                 }
               }
+              if (game.isEnd()) {
+                for (int i = 0; i < editableRow; ++i) {
+                  for (int j = 0; j < colors; ++j) {
+                    numColorsButtons[i][j] = -1;
+                  }
+                }
+                Future.delayed(const Duration(seconds: 1), () {
+                  showDialog<String>(
+                      context: context,
+                      builder: (BuildContext context) => AlertDialog(
+                            title:
+                                Text(game.isWin() ? 'You won!' : 'You lost :('),
+                            content: Text(game.isWin()
+                                ? 'congratulations :)'
+                                : 'keep trying'),
+                            shape: const RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(20))),
+                            actions: <Widget>[
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('OK'),
+                              ),
+                            ],
+                          ));
+                });
+              }
               setState(() {});
             }
           },
           backgroundColor: theme,
-          child: Icon(game.isEnd() ? Icons.replay : Icons.check, color: textColor),
+          child:
+              Icon(game.isEnd() ? Icons.replay : Icons.check, color: textColor),
         ),
         body: Stack(children: [
           Align(
-              alignment: const AlignmentDirectional(-1, 1),
+              alignment: const AlignmentDirectional(-0.987, .98),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: sideButtons
-              )
-          ),
-          Align(
-              alignment: const AlignmentDirectional(0.25, -0.75),
-              child: Container(
-                /* TODO con un colore di sfondo: grigio scuretto
-                *          ______
-                *        /
-                *        | 
-                *        |
-                */
-                // padding: const EdgeInsets.only(right: 10, bottom: 10),
-                // decoration: BoxDecoration(
-                //   // border: Border(top: BorderSide(width: 3, color: theme), left: BorderSide(width: 3, color: theme)),
-                //   border: Border.all(width: 3, color: theme),
-                //   // shape: BoxShape.circle
-                // ),
-                child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: column
-              )
-            )
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: sideButtons)),
+          Align(
+            alignment: const AlignmentDirectional(1, 1),
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.85,
+              height: MediaQuery.of(context).size.height * 1,
+              decoration: const BoxDecoration(
+                color: Color(0xFF5F5F5F),
+                borderRadius: BorderRadius.only(topLeft: Radius.circular(35)),
+              ),
+              child: Align(
+                  alignment: const AlignmentDirectional(-0.5, -0.5),
+                  child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: column)),
+            ),
           )
         ]));
   }
