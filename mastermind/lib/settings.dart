@@ -3,8 +3,8 @@ import 'home.dart';
 import 'logic.dart';
 
 Game game = Home.game;
-late Color theme = Colors.green;
-late Color disabledColor = Colors.grey;
+Color theme = HomeApp.mainColor;
+Color disabledColor = Colors.grey;
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -74,16 +74,14 @@ class SettingsApp extends State<SettingsPage> {
               space,
               Text('Allow color repetition', style: font),
               Switch(
-                // thumb color (round icon)
                 activeColor: theme,
                 activeTrackColor: theme,
                 inactiveThumbColor: disabledColor,
                 inactiveTrackColor: disabledColor,
                 splashRadius: 17,
-                // boolean variable value
                 value: game.allowRepetition,
-                // changes the state of the switch
-                onChanged: (value) => setState(() => game.allowRepetition = value),
+                onChanged: (value) =>
+                    setState(() => game.allowRepetition = value),
               ),
             ])));
   }

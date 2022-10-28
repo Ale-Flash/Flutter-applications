@@ -14,7 +14,7 @@ class HomeApp extends StatelessWidget {
       initialRoute: '/',
       routes: <String, WidgetBuilder>{
         '/': (BuildContext context) => const Home(),
-        '/tutorial': (BuildContext context) => const Tutorial(),
+        '/tutorial': (BuildContext context) => Tutorial(),
         '/play': (BuildContext context) => const MyHomePage(),
         '/settings': (BuildContext context) => const SettingsPage()
       },
@@ -23,8 +23,8 @@ class HomeApp extends StatelessWidget {
 }
 
 class Home extends StatelessWidget {
-  static late Game game;
-
+  static Game game = Game();
+  
   SizedBox button(double size, ButtonStyle style, Icon icon, String route,
       BuildContext context) {
     return SizedBox(
@@ -39,7 +39,6 @@ class Home extends StatelessWidget {
   const Home({super.key});
   @override
   Widget build(BuildContext context) {
-    game = Game();
     ButtonStyle style = ButtonStyle(
         shape: MaterialStateProperty.all(const CircleBorder()),
         padding: MaterialStateProperty.all(const EdgeInsets.all(0)));

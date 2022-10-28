@@ -1,15 +1,18 @@
 import 'dart:math';
 
 class Game {
-  late int rows, colorNumber, colorsAvailable, nGuesses, index;
+  late int rows, colorNumber, colorsAvailable, nGuesses;
   late bool win, end, allowRepetition;
   late List<int> correctSequence;
   late List<List<int>> guesses;
+  late List<List<int>> results;
   Game(
       {this.colorNumber = 4,
       this.rows = 10,
-      this.colorsAvailable = 8,
-      this.allowRepetition = false});
+      this.colorsAvailable = 6,
+      this.allowRepetition = false}) {
+    start();
+  }
 
   void start() {
     // randomize the sequence
@@ -30,7 +33,8 @@ class Game {
     end = false;
     guesses = List.generate(
         rows, (_) => List.filled(colorNumber, 0, growable: false));
-    index = 0;
+    results = List.generate(
+        rows, (_) => List.filled(colorNumber, -1, growable: false));
   }
 
   bool isValid(List<int> guess) {
@@ -71,18 +75,21 @@ class Game {
   void addRowsNum(int n) {
     if (canAddRows(n)) {
       rows += n;
+      start();
     }
   }
 
   void addColNum(int n) {
     if (canAddCol(n)) {
       colorNumber += n;
+      start();
     }
   }
 
   void addAvailColNum(int n) {
     if (canAddColors(n)) {
       colorsAvailable += n;
+      start();
     }
   }
 
@@ -96,7 +103,7 @@ class Game {
       return List.empty();
     }
 
-    guesses[nGuesses++] = guess;
+    guesses[nGuesses] = [...guess];
     int correct = 0;
     int correctPlace = 0;
     List<int> corrSeq = [...correctSequence];
@@ -126,7 +133,12 @@ class Game {
     if (nGuesses >= rows) {
       end = true;
     }
-    return <int>[correctPlace, correct, colorNumber - correctPlace - correct];
+    results[nGuesses] = <int>[
+      correctPlace,
+      correct,
+      colorNumber - correctPlace - correct
+    ];
+    return results[nGuesses++];
   }
 
   List<int> showSequence() {
