@@ -130,7 +130,7 @@ class Game {
       win = true;
       end = true;
     }
-    if (nGuesses >= rows) {
+    if (nGuesses + 1 >= rows) {
       end = true;
     }
     results[nGuesses] = <int>[
