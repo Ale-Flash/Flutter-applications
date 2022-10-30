@@ -1,3 +1,4 @@
+import 'package:cool_alert/cool_alert.dart';
 import 'package:flutter/material.dart';
 import 'package:mastermind/logic.dart';
 import 'home.dart';
@@ -114,31 +115,30 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // selectable buttons for tries
     for (int i = 0; i < rows; ++i) {
-      List<Widget> row = [];
-      for (int j = 0; j < colors; ++j) {
-        row.add(Container(
-            padding: EdgeInsets.all(padding),
-            width: game.colorNumber > 5 ? 44 : 51,
-            height: game.colorNumber > 5 ? 44 : 51,
-            child: ElevatedButton(
-              onPressed: () => setState(() {
-                if (game.isEnd()) return;
-                if (i < editableRow) {
-                  numColorsButtons[i][j] = MyHomePage.selectedIntColor;
-                } else {
-                  // if I press a previous color, that should be the selected color
-                  MyHomePage.selectedIntColor = numColorsButtons[i][j];
-                }
-              }),
-              style: ButtonStyle(
-                  backgroundColor: MaterialStatePropertyAll<Color>(
-                      numColorsButtons[i][j] == -1
-                          ? defaultColor
-                          : MyHomePage.allColors[numColorsButtons[i][j]]),
-                  shape: MaterialStateProperty.all(const CircleBorder())),
-              child: empty,
-            )));
-      }
+      List<Widget> row = List.generate(
+          colors,
+          (j) => Container(
+              padding: EdgeInsets.all(padding),
+              width: game.colorNumber > 5 ? 44 : 51,
+              height: game.colorNumber > 5 ? 44 : 51,
+              child: ElevatedButton(
+                onPressed: () => setState(() {
+                  if (game.isEnd()) return;
+                  if (i < editableRow) {
+                    numColorsButtons[i][j] = MyHomePage.selectedIntColor;
+                  } else {
+                    // if I press a previous color, that should be the selected color
+                    MyHomePage.selectedIntColor = numColorsButtons[i][j];
+                  }
+                }),
+                style: ButtonStyle(
+                    backgroundColor: MaterialStatePropertyAll<Color>(
+                        numColorsButtons[i][j] == -1
+                            ? defaultColor
+                            : MyHomePage.allColors[numColorsButtons[i][j]]),
+                    shape: MaterialStateProperty.all(const CircleBorder())),
+                child: empty,
+              )));
 
       // small buttons for the result
       List<Widget> smallButtons = List.generate(
@@ -171,13 +171,6 @@ class _MyHomePageState extends State<MyHomePage> {
               children: row)));
     }
 
-    // TODO PAGINA INIZIALE CON IMPOSTAZIONI
-    // TODO SUONI, NUMERO RIGHE, COLONNE, CONSENTI DUPLICATI
-    // LINGUA?
-    // TODO add correct row, add win and lose screen
-
-    // TODO add highscore and/or timer
-
     return Scaffold(
         appBar: AppBar(
           title: Text(widget.title),
@@ -189,14 +182,11 @@ class _MyHomePageState extends State<MyHomePage> {
                           game.start();
                           initialize();
                         }),
-                    // style: ButtonStyle(
-                    //     backgroundColor: const MaterialStatePropertyAll<Color>(Colors.green),
-                    //     shape: MaterialStateProperty.all(const CircleBorder())),
                     child: const Icon(Icons.replay, color: Colors.white)))
           ],
         ),
         floatingActionButton: FloatingActionButton(
-          onPressed: () {
+          onPressed: () { // check sequence button
             if (wait) return;
             if (game.isEnd() || editableRow - 1 < 0) {
               setState(() {
@@ -237,24 +227,16 @@ class _MyHomePageState extends State<MyHomePage> {
               }
               wait = true;
               Future.delayed(const Duration(seconds: 1), () {
-                showDialog<String>(
+                CoolAlert.show(
                     context: context,
-                    builder: (BuildContext context) => AlertDialog(
-                          title:
-                              Text(game.isWin() ? 'You won!' : 'You lost :('),
-                          content: Text(game.isWin()
-                              ? 'congratulations :)'
-                              : 'keep trying'),
-                          shape: const RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(20))),
-                          actions: <Widget>[
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text('OK'),
-                            ),
-                          ],
-                        ));
+                    type: game.isWin()
+                        ? CoolAlertType.success
+                        : CoolAlertType.error,
+                    title: game.isWin() ? 'You won!' : 'You lost :(',
+                    text: game.isWin() ? 'congratulations :)' : 'keep trying',
+                    loopAnimation: true,
+                    confirmBtnColor: theme);
+
                 wait = false;
               });
               ++editableRow;
@@ -273,16 +255,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: List.generate(
-                    // TODO mettere qui al posto dell'icona il bordo esterno
                     game.colorsAvailable,
                     (index) => Container(
                         padding: const EdgeInsets.all(3),
                         width: 55,
                         height: 55,
-                        // decoration: BoxDecoration(
-                        //   borderRadius: const BorderRadius.all(Radius.circular(5555)),
-                        //   border: Border.all(color: MyHomePage.selectedIntColor == index ? Colors.black : Colors.transparent, width: 3)
-                        //   ),
                         child: ElevatedButton(
                           onPressed: () => setState(() {
                             MyHomePage.selectedIntColor = index;
@@ -328,34 +305,6 @@ class _MyHomePageState extends State<MyHomePage> {
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: column))))),
           ),
-          Align(
-            alignment: const AlignmentDirectional(0, -.98),
-            child: Container(
-              decoration: BoxDecoration(
-                  color: alertVisible
-                      ? const Color(0xE6FFFFFF)
-                      : Colors.transparent,
-                  borderRadius: const BorderRadius.all(Radius.circular(20))),
-              child: SizedBox(
-                width: 350,
-                height: 50,
-                child: Row(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: alertVisible
-                      ? const [
-                          Icon(Icons.warning_amber_rounded,
-                              color: Colors.red, size: 24),
-                          Text('Missing some buttons...',
-                              style:
-                                  TextStyle(fontSize: 16, color: Colors.black))
-                        ]
-                      : [],
-                ),
-              ),
-            ),
-          ),
-          // TODO sistemare mettere timer
           Align(
             alignment: const AlignmentDirectional(0, -.98),
             child: Container(

@@ -24,7 +24,7 @@ class HomeApp extends StatelessWidget {
 
 class Home extends StatelessWidget {
   static Game game = Game();
-  
+
   SizedBox button(double size, ButtonStyle style, Icon icon, String route,
       BuildContext context) {
     return SizedBox(
@@ -55,7 +55,7 @@ class Home extends StatelessWidget {
           button(50, style, const Icon(Icons.question_mark_rounded),
               '/tutorial', context),
           Padding(
-              padding: const EdgeInsets.all(5.0),
+              padding: const EdgeInsets.all(5),
               child: button(
                   75,
                   style,

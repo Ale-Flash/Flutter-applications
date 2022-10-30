@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mastermind/logic.dart';
-
+import 'logic.dart';
 import 'gui.dart';
 
 class Tutorial extends StatelessWidget {

@@ -102,12 +102,13 @@ class Game {
       end = true;
       return List.empty();
     }
-
-    guesses[nGuesses] = [...guess];
-    int correct = 0;
     int correctPlace = 0;
+    int correct = 0;
+    // copy the arrays
+    guesses[nGuesses] = [...guess];
     List<int> corrSeq = [...correctSequence];
 
+    // check the numbers that are in the correct place
     for (int i = 0; i < guess.length; ++i) {
       if (guess[i] == corrSeq[i]) {
         guess[i] = 0;
@@ -116,6 +117,7 @@ class Game {
       }
     }
 
+    // check the numbers that are in the0 incorrect place
     for (int i = 0; i < guess.length; ++i) {
       if (guess[i] == 0) continue;
       for (int j = 0; j < corrSeq.length; ++j) {
@@ -133,6 +135,7 @@ class Game {
     if (nGuesses + 1 >= rows) {
       end = true;
     }
+    // save the result
     results[nGuesses] = <int>[
       correctPlace,
       correct,

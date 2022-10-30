@@ -59,7 +59,6 @@ class SettingsApp extends State<SettingsPage> {
         ),
         body: Center(
             child: Column(mainAxisSize: MainAxisSize.min,
-                // mainAxisAlignment: MainAxisAlignment.center,
                 children: [
               Text('Change number of rows', style: font),
               changeSettingsLine(
