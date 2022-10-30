@@ -1,6 +1,6 @@
 import 'package:cool_alert/cool_alert.dart';
 import 'package:flutter/material.dart';
-import 'package:mastermind/logic.dart';
+import 'logic.dart';
 import 'home.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -107,7 +107,6 @@ class _MyHomePageState extends State<MyHomePage> {
     ));
     column.add(Container(
         padding: const EdgeInsets.all(1),
-        // width: MediaQuery.of(context).size.width * 0.76,
         child: Row(
             mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -154,7 +153,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         : MyHomePage.showColor[resultsOfTry[i][j]],
                     shape: BoxShape.circle),
               )));
-      // row.add(const SizedBox(width: 1));
+      
       row.add(Column(children: <Widget>[
         Row(children: smallButtons.sublist(0, colors ~/ 2)),
         Row(children: smallButtons.sublist(colors ~/ 2))
