@@ -58,7 +58,7 @@ class BoardState extends State<Board> {
                                     ...List.generate(
                                         // colored containers containing the computer code
                                         game.colorNumber,
-                                        (j) => ColorContainer(
+                                        (j) => ColoredContainer(
                                             size:
                                                 game.colorNumber > 5 ? 44 : 51,
                                             padding: padding,
@@ -129,13 +129,12 @@ class BoardState extends State<Board> {
                                           Row(
                                               children: List.generate(
                                                   game.colorNumber ~/ 2,
-                                                  (j) => ColorContainer(
+                                                  (j) => ColoredContainer(
                                                       size: game.colorNumber > 5
                                                           ? 11
                                                           : 12,
                                                       padding: 1,
-                                                      color: MyHomePage
-                                                                      .resultsOfTry[
+                                                      color: MyHomePage.resultsOfTry[
                                                                   i][j] ==
                                                               -1
                                                           ? MyHomePage
@@ -148,7 +147,7 @@ class BoardState extends State<Board> {
                                               children: List.generate(
                                                   game.colorNumber -
                                                       game.colorNumber ~/ 2,
-                                                  (j) => ColorContainer(
+                                                  (j) => ColoredContainer(
                                                       size: game.colorNumber > 5
                                                           ? 11
                                                           : 12,

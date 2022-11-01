@@ -155,4 +155,9 @@ class Game {
   bool isEnd() {
     return end;
   }
+
+  void setRepetition(bool value) {
+    if (allowRepetition && !value) start();
+    allowRepetition = value;
+  }
 }

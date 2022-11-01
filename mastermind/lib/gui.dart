@@ -121,6 +121,8 @@ class MyHomePageState extends State<MyHomePage> {
               MyHomePage.guessed[j] = index + 1;
             }
             if (index == -1 || !game.isValid(MyHomePage.guessed)) {
+              // if already visible do nothing
+              if (alertVisible) return;
               alertVisible = true;
               setState(() {});
               Future.delayed(const Duration(seconds: 2), () {

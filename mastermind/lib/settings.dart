@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'home.dart';
 import 'logic.dart';
 
-Game game = Home.game;
-Color theme = HomeApp.mainColor;
-Color disabledColor = Colors.grey;
+final Game game = Home.game;
+const Color theme = HomeApp.mainColor;
+const Color disabledColor = Colors.grey;
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -14,7 +14,8 @@ class SettingsPage extends StatefulWidget {
 
 class SettingsApp extends State<SettingsPage> {
   final TextStyle font = const TextStyle(fontSize: 17);
-  Row changeSettingsLine(boolFunction, function, text) {
+  Row changeSettingsLine(bool Function(int) boolFunction,
+      void Function(int) function, int Function() text) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -31,9 +32,10 @@ class SettingsApp extends State<SettingsPage> {
                     (boolFunction(-1)) ? theme : disabledColor),
                 shape: MaterialStateProperty.all(const CircleBorder())),
             child: const Icon(Icons.remove)),
-        Padding(
-            padding: const EdgeInsets.all(5),
-            child: Text('${text()}', style: font)),
+        Container(
+            margin: const EdgeInsets.all(1),
+            width: 30,
+            child: Center(child: Text(text().toString(), style: font))),
         ElevatedButton(
             onPressed: () {
               if (boolFunction(1)) {
@@ -58,30 +60,27 @@ class SettingsApp extends State<SettingsPage> {
           title: const Text('Settings'),
         ),
         body: Center(
-            child: Column(mainAxisSize: MainAxisSize.min,
-                children: [
-              Text('Change number of rows', style: font),
-              changeSettingsLine(
-                  game.canAddRows, game.addRowsNum, game.getRows),
-              space,
-              Text('Change number of column', style: font),
-              changeSettingsLine(game.canAddCol, game.addColNum, game.getCol),
-              space,
-              Text('Change number of pickable colors', style: font),
-              changeSettingsLine(game.canAddColors, game.addAvailColNum,
-                  game.getAvailableColors),
-              space,
-              Text('Allow color repetition', style: font),
-              Switch(
-                activeColor: theme,
-                activeTrackColor: theme,
-                inactiveThumbColor: disabledColor,
-                inactiveTrackColor: disabledColor,
-                splashRadius: 17,
-                value: game.allowRepetition,
-                onChanged: (value) =>
-                    setState(() => game.allowRepetition = value),
-              ),
-            ])));
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Text('Change number of rows', style: font),
+          changeSettingsLine(game.canAddRows, game.addRowsNum, game.getRows),
+          space,
+          Text('Change number of column', style: font),
+          changeSettingsLine(game.canAddCol, game.addColNum, game.getCol),
+          space,
+          Text('Change number of pickable colors', style: font),
+          changeSettingsLine(
+              game.canAddColors, game.addAvailColNum, game.getAvailableColors),
+          space,
+          Text('Allow color repetition', style: font),
+          Switch(
+            activeColor: theme,
+            activeTrackColor: theme,
+            inactiveThumbColor: disabledColor,
+            inactiveTrackColor: disabledColor,
+            splashRadius: 17,
+            value: game.allowRepetition,
+            onChanged: (value) => setState(() => game.setRepetition(value)),
+          ),
+        ])));
   }
 }

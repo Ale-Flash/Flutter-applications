@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 
-class ColorContainer extends StatefulWidget {
+class ColoredContainer extends StatefulWidget {
   final double size, padding;
   final Color color;
-  const ColorContainer(
+  const ColoredContainer(
       {super.key,
       required this.size,
       required this.padding,
       required this.color});
 
   @override
-  State<ColorContainer> createState() => _ColorContainerState();
+  State<ColoredContainer> createState() => _ColoredContainerState();
 }
 
-class _ColorContainerState extends State<ColorContainer> {
+class _ColoredContainerState extends State<ColoredContainer> {
   @override
   Widget build(BuildContext context) {
     return Container(

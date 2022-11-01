@@ -18,7 +18,7 @@ class Tutorial extends StatelessWidget {
                     '''The computer picks a sequence of colors. Like this one:''',
                     style: style),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
                         4,
                         (index) => Container(
@@ -30,13 +30,15 @@ class Tutorial extends StatelessWidget {
                               onPressed: () {},
                               style: ButtonStyle(
                                   backgroundColor:
-                                      MaterialStatePropertyAll<Color>(MyHomePage
-                                          .allColors[g.correctSequence[index]-1]),
+                                      MaterialStatePropertyAll<Color>(
+                                          MyHomePage.allColors[
+                                              g.correctSequence[index] - 1]),
                                   shape: MaterialStateProperty.all(
                                       const CircleBorder())),
                               child: const SizedBox(),
                             )))),
-                Text('''The number of colors is the code length.
+                Text(
+                    '''The number of colors is the code length.
 The default code length is 4 but it can be changed on the settings menu.
 The objective of the game is to guess the exact positions of the colors in the computer's sequence.
 By default, a color can be used only once in a code sequence.
