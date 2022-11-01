@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mastermind/gui.dart';
-import 'package:mastermind/settings.dart';
-import 'package:mastermind/tutorial.dart';
+import 'gui.dart';
+import 'settings.dart';
+import 'tutorial.dart';
 import 'logic.dart';
 
 class HomeApp extends StatelessWidget {
