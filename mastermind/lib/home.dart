@@ -18,6 +18,7 @@ class HomeApp extends StatelessWidget {
         '/play': (BuildContext context) => MyHomePage(),
         '/settings': (BuildContext context) => const SettingsPage()
       },
+      debugShowCheckedModeBanner: false
     );
   }
 }
