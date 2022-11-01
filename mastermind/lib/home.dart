@@ -15,7 +15,7 @@ class HomeApp extends StatelessWidget {
       routes: <String, WidgetBuilder>{
         '/': (BuildContext context) => const Home(),
         '/tutorial': (BuildContext context) => Tutorial(),
-        '/play': (BuildContext context) => const MyHomePage(),
+        '/play': (BuildContext context) => MyHomePage(),
         '/settings': (BuildContext context) => const SettingsPage()
       },
     );
