@@ -160,4 +160,14 @@ class Game {
     if (allowRepetition && !value) start();
     allowRepetition = value;
   }
+
+  void setRows(int n) {
+    if (n > 0) rows = n;
+  }
+  void setCols(int n) {
+    if (n > 0) colorNumber = n;
+  }
+  void setColors(int n) {
+    if (n > 0) colorsAvailable = n;
+  }
 }

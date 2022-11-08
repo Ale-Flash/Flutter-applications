@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'home.dart';
 import 'logic.dart';
 
@@ -25,6 +26,11 @@ class SettingsApp extends State<SettingsPage> {
               if (boolFunction(-1)) {
                 function(-1);
                 setState(() {});
+                SharedPreferences.getInstance().then((prefs) {
+                  prefs.setInt('rows', Home.game.rows);
+                  prefs.setInt('cols', Home.game.colorNumber);
+                  prefs.setInt('colors', Home.game.colorsAvailable);
+                });
               }
             },
             style: ButtonStyle(
@@ -41,6 +47,11 @@ class SettingsApp extends State<SettingsPage> {
               if (boolFunction(1)) {
                 function(1);
                 setState(() {});
+                SharedPreferences.getInstance().then((prefs) {
+                  prefs.setInt('rows', Home.game.rows);
+                  prefs.setInt('cols', Home.game.colorNumber);
+                  prefs.setInt('colors', Home.game.colorsAvailable);
+                });
               }
             },
             style: ButtonStyle(
@@ -79,7 +90,12 @@ class SettingsApp extends State<SettingsPage> {
             inactiveTrackColor: disabledColor,
             splashRadius: 17,
             value: game.allowRepetition,
-            onChanged: (value) => setState(() => game.setRepetition(value)),
+            onChanged: (value) => setState(() {
+              game.setRepetition(value);
+              SharedPreferences.getInstance().then((prefs) {
+                prefs.setBool('duplicate', Home.game.allowRepetition);
+              });
+            }),
           ),
         ])));
   }

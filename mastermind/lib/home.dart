@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'gui.dart';
 import 'settings.dart';
 import 'tutorial.dart';
@@ -10,16 +11,15 @@ class HomeApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData(primarySwatch: mainColor),
-      initialRoute: '/',
-      routes: <String, WidgetBuilder>{
-        '/': (BuildContext context) => const Home(),
-        '/tutorial': (BuildContext context) => Tutorial(),
-        '/play': (BuildContext context) => MyHomePage(),
-        '/settings': (BuildContext context) => const SettingsPage()
-      },
-      debugShowCheckedModeBanner: false
-    );
+        theme: ThemeData(primarySwatch: mainColor),
+        initialRoute: '/',
+        routes: <String, WidgetBuilder>{
+          '/': (BuildContext context) => Home(),
+          '/tutorial': (BuildContext context) => Tutorial(),
+          '/play': (BuildContext context) => MyHomePage(),
+          '/settings': (BuildContext context) => const SettingsPage()
+        },
+        debugShowCheckedModeBanner: false);
   }
 }
 
@@ -37,7 +37,15 @@ class Home extends StatelessWidget {
             child: icon));
   }
 
-  const Home({super.key});
+  Home({super.key}) { // restore the previous settings
+    SharedPreferences.getInstance().then((prefs) {
+      Home.game.setRows(prefs.getInt('rows') ?? -1);
+      Home.game.setCols(prefs.getInt('cols') ?? -1);
+      Home.game.setColors(prefs.getInt('colors') ?? -1);
+      Home.game.setRepetition(prefs.getBool('duplicate') ?? false);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     ButtonStyle style = ButtonStyle(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mastermind/sidebar.dart';
-
+import 'sidebar.dart';
 import 'coloredcontainer.dart';
 import 'gui.dart';
 import 'home.dart';
