@@ -30,6 +30,8 @@ class SettingsApp extends State<SettingsPage> {
                   prefs.setInt('rows', Home.game.rows);
                   prefs.setInt('cols', Home.game.colorNumber);
                   prefs.setInt('colors', Home.game.colorsAvailable);
+                  prefs.remove('sequence');
+                  prefs.remove('game');
                 });
               }
             },
@@ -51,6 +53,8 @@ class SettingsApp extends State<SettingsPage> {
                   prefs.setInt('rows', Home.game.rows);
                   prefs.setInt('cols', Home.game.colorNumber);
                   prefs.setInt('colors', Home.game.colorsAvailable);
+                  prefs.remove('sequence');
+                  prefs.remove('game');
                 });
               }
             },
@@ -94,6 +98,10 @@ class SettingsApp extends State<SettingsPage> {
               game.setRepetition(value);
               SharedPreferences.getInstance().then((prefs) {
                 prefs.setBool('duplicate', Home.game.allowRepetition);
+                if (value) {
+                  prefs.remove('sequence');
+                  prefs.remove('game');
+                }
               });
             }),
           ),

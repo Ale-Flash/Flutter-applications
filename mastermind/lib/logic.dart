@@ -117,7 +117,7 @@ class Game {
       }
     }
 
-    // check the numbers that are in the0 incorrect place
+    // check the numbers that are in the incorrect place
     for (int i = 0; i < guess.length; ++i) {
       if (guess[i] == 0) continue;
       for (int j = 0; j < corrSeq.length; ++j) {
@@ -141,6 +141,7 @@ class Game {
       correct,
       colorNumber - correctPlace - correct
     ];
+    if (end) return results[nGuesses];
     return results[nGuesses++];
   }
 
@@ -163,11 +164,14 @@ class Game {
 
   void setRows(int n) {
     if (n > 0) rows = n;
+    start();
   }
   void setCols(int n) {
     if (n > 0) colorNumber = n;
+    start();
   }
   void setColors(int n) {
     if (n > 0) colorsAvailable = n;
+    start();
   }
 }

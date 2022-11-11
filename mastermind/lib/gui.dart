@@ -1,5 +1,6 @@
 import 'package:cool_alert/cool_alert.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'board.dart';
 import 'sidebar.dart';
 import 'logic.dart';
@@ -96,6 +97,10 @@ class MyHomePageState extends State<MyHomePage> {
                           initialize();
                           board.refresh();
                           sidebar.refresh();
+                          SharedPreferences.getInstance().then((prefs) {
+                            prefs.remove('game');
+                            prefs.remove('sequence');
+                          });
                         }),
                     child: const Icon(Icons.replay, color: Colors.white)))
           ],
@@ -110,6 +115,10 @@ class MyHomePageState extends State<MyHomePage> {
                 initialize();
                 board.refresh();
                 sidebar.refresh();
+                SharedPreferences.getInstance().then((prefs) {
+                  prefs.remove('game');
+                  prefs.remove('sequence');
+                });
               });
               return;
             }
@@ -143,6 +152,22 @@ class MyHomePageState extends State<MyHomePage> {
                 MyHomePage.resultsOfTry[MyHomePage.editableRow - 1][pos++] = i;
               }
             }
+            // save the game
+            SharedPreferences.getInstance().then((prefs) {
+              List<String> saved = List.filled(Home.game.rows, '');
+              String seq = '';
+              for (int i = 0; i < Home.game.correctSequence.length; ++i) {
+                seq += Home.game.correctSequence[i].toString();
+              }
+              prefs.setString('sequence', seq);
+              for (int i = 0; i < Home.game.rows; ++i) {
+                for (int j = 0; j < Home.game.colorNumber; ++j) {
+                  saved[i] += Home.game.guesses[i][j].toString();
+                }
+              }
+              prefs.setStringList('game', saved);
+            });
+
             if (game.isEnd()) {
               for (int i = 0; i < MyHomePage.editableRow - 1; ++i) {
                 for (int j = 0; j < MyHomePage.colors; ++j) {

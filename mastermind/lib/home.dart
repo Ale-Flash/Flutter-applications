@@ -37,12 +37,27 @@ class Home extends StatelessWidget {
             child: icon));
   }
 
-  Home({super.key}) { // restore the previous settings
+  Home({super.key}) {
+    // restore the previous settings and previous game
     SharedPreferences.getInstance().then((prefs) {
       Home.game.setRows(prefs.getInt('rows') ?? -1);
       Home.game.setCols(prefs.getInt('cols') ?? -1);
       Home.game.setColors(prefs.getInt('colors') ?? -1);
       Home.game.setRepetition(prefs.getBool('duplicate') ?? false);
+      Home.game.start();
+      List<String> saved = prefs.getStringList('game') ?? [];
+      String seq = prefs.getString('sequence') ?? '';
+      if (seq == '') return;
+      for (int i = 0; i < seq.length; ++i) {
+        Home.game.correctSequence[i] = int.parse(seq[i]);
+      }
+      for (int i = 0; i < saved.length; ++i) {
+        List<int> guess = [];
+        for (int j = 0; j < saved[i].length; ++j) {
+          guess.add(int.parse(saved[i][j]));
+        }
+        Home.game.check(guess);
+      }
     });
   }
 
