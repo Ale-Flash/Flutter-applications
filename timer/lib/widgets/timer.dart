@@ -3,19 +3,11 @@ import '../main.dart';
 
 class Clock extends StatefulWidget {
   const Clock({super.key});
-  // final _ClockState cs = _ClockState();
   @override
   State<Clock> createState() => _ClockState();
-  // void refresh() {
-  //   cs.refresh();
-  // }
 }
 
 class _ClockState extends State<Clock> {
-  // void refresh() {
-  //   setState(() {});
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Stack(children: [
@@ -28,7 +20,11 @@ class _ClockState extends State<Clock> {
                     text: '',
                     style: TextStyle(
                         color: MyApp.thememe[MyApp.currentTheme]['selected'],
-                        fontSize: MyApp.hours > 0 ? MyApp.hours >= 10 ? 60 : 65 : 70),
+                        fontSize: MyApp.hours > 0
+                            ? MyApp.hours >= 10
+                                ? 60
+                                : 65
+                            : 70),
                     children: [
                   TextSpan(text: MyApp.hours > 0 ? '${MyApp.hours}:' : ''),
                   TextSpan(
@@ -49,14 +45,22 @@ class _ClockState extends State<Clock> {
         child: SizedBox(
             width: 270,
             height: 270,
-            child: CircularProgressIndicator(
-              color: MyApp.thememe[MyApp.currentTheme]
-                  [MyApp.timer.isPaused() ? 'disabled' : 'primary'],
-              backgroundColor: MyApp.thememe[MyApp.currentTheme]['content'],
-              value: MyApp.initialTime == 0
-                  ? 1
-                  : (MyApp.currentTime / MyApp.initialTime),
-              strokeWidth: 7,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween<double>(
+                  begin: 0.0,
+                  end: MyApp.initialTime == 0
+                      ? 1
+                      : (MyApp.currentTime / MyApp.initialTime)),
+              duration: const Duration(seconds: 1),
+              builder: (context, value, _) => CircularProgressIndicator(
+                color: MyApp.thememe[MyApp.currentTheme]
+                    [MyApp.timer.isPaused() ? 'disabled' : 'primary'],
+                backgroundColor: MyApp.thememe[MyApp.currentTheme]['content'],
+                value: ((MyApp.jump) ? (MyApp.initialTime == 0
+                      ? 1
+                      : (MyApp.currentTime / MyApp.initialTime)) : value),
+                strokeWidth: 7,
+              ),
             )),
       )
     ]);

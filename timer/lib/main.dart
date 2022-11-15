@@ -37,7 +37,7 @@ class MyApp extends StatelessWidget {
   static int hours = 0, minutes = 0, seconds = 3;
   static int initialTime = 0, currentTime = 0;
   static late MyTimer timer;
-
+  static bool jump = true;
   const MyApp({super.key});
 
   @override
@@ -64,12 +64,14 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   Stream blinkEvent =
-      Stream.periodic(const Duration(milliseconds: 500), (tick) => tick);
+      Stream.periodic(const Duration(milliseconds: 333), (tick) => tick)
+          .asBroadcastStream();
   late StreamSubscription blink;
   _MyHomePageState() {
     MyApp.timer = MyTimer(update);
   }
   void update(int time) => setState(() {
+        MyApp.jump = false;
         if (time == 0) snooze();
         MyApp.currentTime = time;
         MyApp.hours = time ~/ 3600;
@@ -90,17 +92,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
   bool isEnded = false;
   void snooze() {
+    Future.delayed(const Duration(seconds: 1), () {
+      MyApp.jump = true;
+    });
     isEnded = true;
-    FlutterRingtonePlayer.playNotification();
-    // FlutterRingtonePlayer.play(
-    //   android: AndroidSounds.notification,
-    //   ios: IosSounds.glass,
-    //   looping: true, // Android only - API >= 28
-    //   volume: 0.1, // Android only - API >= 28
-    //   asAlarm: false, // Android only - all APIs
-    // );
-    // FlutterRingtonePlayer.playAlarm().then(print);
+    FlutterRingtonePlayer.playAlarm();
+
     blink = blinkEvent.listen((tick) {
+      if (tick < 6) return;
       if (tick % 3 == 0) {
         MyApp.currentTime = MyApp.initialTime;
         setState(() {});
@@ -113,11 +112,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void stopSnooze() {
     isEnded = false;
-    FlutterRingtonePlayer.stop().then(print);
-    blink.pause();
+    FlutterRingtonePlayer.stop();
+    blink.cancel();
+    MyApp.timer.reset();
   }
 
-  late Clock clock;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -159,7 +158,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ]
               : [
                   // ignore: prefer_const_constructors
-                  clock = Clock(),
+                  Clock(),
                   Align(
                       alignment: const Alignment(0, 0.7),
                       child: SizedBox(
@@ -199,7 +198,9 @@ class _MyHomePageState extends State<MyHomePage> {
                           child: ElevatedButton(
                               // RESTART BUTTON
                               onPressed: () => setState(() {
+                                    if (isEnded) stopSnooze();
                                     MyApp.timer.reset();
+                                    MyApp.jump = true;
                                   }),
                               style: ButtonStyle(
                                   backgroundColor:
@@ -220,7 +221,9 @@ class _MyHomePageState extends State<MyHomePage> {
                           child: ElevatedButton(
                               // EDIT BUTTON
                               onPressed: () => setState(() {
+                                    if (isEnded) stopSnooze();
                                     MyApp.timer.reset();
+                                    MyApp.jump = true;
                                     MyApp.hours = MyApp.initialTime ~/ 3600;
                                     MyApp.initialTime %= 3600;
                                     MyApp.minutes = MyApp.initialTime ~/ 60;
