@@ -1,15 +1,18 @@
 import 'dart:async';
+import 'dart:ffi';
 
+import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'logic.dart';
+import 'settings.dart';
 import 'widgets/time_selector.dart';
 import 'widgets/timer.dart';
 
 // TODO https://pub.dev/packages/flutter_local_notifications
 // TODO con pausa, riprendi, elimina
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -18,6 +21,7 @@ class MyApp extends StatelessWidget {
       'primary': Color(0xFF6200EE),
       'background': Color(0xFF121212),
       'secondary': Color(0xFF1E1E1E),
+      'text': Color(0xFFC5C5C5),
       'content': Color(0x89000000),
       'selected': Color(0xFFD3D3D3),
       'disabled': Color(0xFF424242)
@@ -38,31 +42,50 @@ class MyApp extends StatelessWidget {
   static int initialTime = 0, currentTime = 0;
   static late MyTimer timer;
   static bool jump = true;
+  static int format = 0;
   const MyApp({super.key});
+  static final MyHomePage _hp = MyHomePage(title: 'Timer');
+  static void refresh() {
+    _hp.refresh();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Timer',
-      theme: ThemeData(
-          colorScheme: ColorScheme.fromSwatch().copyWith(
-        primary: thememe[currentTheme]['primary'],
-      )),
-      debugShowCheckedModeBanner: false,
-      home: const MyHomePage(title: 'Timer'),
-    );
+    return ThemeProvider(
+        initTheme: ThemeData(
+            colorScheme: ColorScheme.fromSwatch().copyWith(
+          primary: thememe[currentTheme]['primary'],
+        )),
+        builder: (context, myTheme) => MaterialApp(
+              title: 'Timer',
+              theme: myTheme,
+              initialRoute: '/',
+              routes: <String, WidgetBuilder>{
+                '/': (BuildContext context) => _hp,
+                '/settings': (BuildContext context) => Settings(),
+              },
+              debugShowCheckedModeBanner: false,
+            ));
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  MyHomePage({super.key, required this.title});
   final String title;
+  void refresh() {
+    mhps.refresh();
+  }
 
+  final _MyHomePageState mhps = _MyHomePageState();
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<MyHomePage> createState() => mhps;
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  void refresh() {
+    setState(() {});
+  }
+
   Stream blinkEvent =
       Stream.periodic(const Duration(milliseconds: 333), (tick) => tick)
           .asBroadcastStream();
@@ -122,6 +145,14 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
         appBar: AppBar(
           title: Text(widget.title),
+          actions: [
+            SizedBox(
+                // REFRESH BUTTON ON TOP RIGHT
+                width: 50,
+                child: GestureDetector(
+                    onTap: () => Navigator.pushNamed(context, '/settings'),
+                    child: const Icon(Icons.settings, color: Colors.white)))
+          ],
         ),
         backgroundColor: MyApp.thememe[MyApp.currentTheme]['background'],
         body: Stack(
