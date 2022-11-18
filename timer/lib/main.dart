@@ -1,16 +1,13 @@
 import 'dart:async';
-import 'dart:ffi';
-
-import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'logic.dart';
+import 'noti.dart';
 import 'settings.dart';
 import 'widgets/time_selector.dart';
 import 'widgets/timer.dart';
 
-// TODO https://pub.dev/packages/flutter_local_notifications
-// TODO con pausa, riprendi, elimina
 void main() {
   runApp(MyApp());
 }
@@ -37,8 +34,7 @@ class MyApp extends StatelessWidget {
     },
   ];
   static int currentTheme = 0;
-  // static int hours = 0, minutes = 5, seconds = 0;
-  static int hours = 0, minutes = 0, seconds = 3;
+  static int hours = 0, minutes = 5, seconds = 0;
   static int initialTime = 0, currentTime = 0;
   static late MyTimer timer;
   static bool jump = true;
@@ -51,21 +47,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ThemeProvider(
-        initTheme: ThemeData(
-            colorScheme: ColorScheme.fromSwatch().copyWith(
-          primary: thememe[currentTheme]['primary'],
-        )),
-        builder: (context, myTheme) => MaterialApp(
-              title: 'Timer',
-              theme: myTheme,
-              initialRoute: '/',
-              routes: <String, WidgetBuilder>{
-                '/': (BuildContext context) => _hp,
-                '/settings': (BuildContext context) => Settings(),
-              },
-              debugShowCheckedModeBanner: false,
-            ));
+    return MaterialApp(
+      title: 'Timer',
+      initialRoute: '/',
+      routes: <String, WidgetBuilder>{
+        '/': (BuildContext context) => _hp,
+        '/settings': (BuildContext context) => Settings(),
+      },
+      debugShowCheckedModeBanner: false,
+    );
   }
 }
 
@@ -81,20 +71,36 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => mhps;
 }
 
+final FlutterLocalNotificationsPlugin flnp = FlutterLocalNotificationsPlugin();
+
 class _MyHomePageState extends State<MyHomePage> {
   void refresh() {
+    MyApp.format = (MyApp.format + 1) % 2;
+    MyApp.format = (MyApp.format + 1) % 2;
     setState(() {});
   }
 
   Stream blinkEvent =
-      Stream.periodic(const Duration(milliseconds: 333), (tick) => tick)
-          .asBroadcastStream();
+      Stream.periodic(const Duration(milliseconds: 333), (tick) => tick);
   late StreamSubscription blink;
   _MyHomePageState() {
+    Noti.initialize(flnp);
     MyApp.timer = MyTimer(update);
+    blink = blinkEvent.listen((tick) {
+      if (tick % 3 == 0) {
+        MyApp.currentTime = MyApp.initialTime;
+        setState(() {});
+      } else if (tick % 3 == 2) {
+        MyApp.currentTime = 0;
+        setState(() {});
+      }
+    });
+    blink.pause();
   }
   void update(int time) => setState(() {
-        MyApp.jump = false;
+        if (time != MyApp.initialTime) {
+          MyApp.jump = false;
+        }
         if (time == 0) snooze();
         MyApp.currentTime = time;
         MyApp.hours = time ~/ 3600;
@@ -102,7 +108,6 @@ class _MyHomePageState extends State<MyHomePage> {
         MyApp.minutes = time ~/ 60;
         time %= 60;
         MyApp.seconds = time;
-        print(MyApp.currentTime);
       });
 
   bool showTimeSelector = true;
@@ -115,28 +120,20 @@ class _MyHomePageState extends State<MyHomePage> {
 
   bool isEnded = false;
   void snooze() {
+    Noti.showBigTextNotification(
+        title: 'Timer', body: 'Your timer has ended', fln: flnp);
     Future.delayed(const Duration(seconds: 1), () {
       MyApp.jump = true;
+      blink.resume();
     });
     isEnded = true;
     FlutterRingtonePlayer.playAlarm();
-
-    blink = blinkEvent.listen((tick) {
-      if (tick < 6) return;
-      if (tick % 3 == 0) {
-        MyApp.currentTime = MyApp.initialTime;
-        setState(() {});
-      } else if (tick % 3 == 2) {
-        MyApp.currentTime = 0;
-        setState(() {});
-      }
-    });
   }
 
   void stopSnooze() {
     isEnded = false;
     FlutterRingtonePlayer.stop();
-    blink.cancel();
+    blink.pause();
     MyApp.timer.reset();
   }
 
@@ -144,14 +141,16 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
+          backgroundColor: MyApp.thememe[MyApp.currentTheme]['primary'],
           title: Text(widget.title),
           actions: [
-            SizedBox(
-                // REFRESH BUTTON ON TOP RIGHT
-                width: 50,
-                child: GestureDetector(
-                    onTap: () => Navigator.pushNamed(context, '/settings'),
-                    child: const Icon(Icons.settings, color: Colors.white)))
+            // REFRESH BUTTON ON TOP RIGHT
+            GestureDetector(
+                onTap: () => Navigator.pushNamed(context, '/settings'),
+                child: const SizedBox(
+                    width: 60,
+                    height: 60,
+                    child: Icon(Icons.settings, color: Colors.white)))
           ],
         ),
         backgroundColor: MyApp.thememe[MyApp.currentTheme]['background'],
@@ -189,7 +188,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ]
               : [
                   // ignore: prefer_const_constructors
-                  Clock(),
+                  MyApp.format == 0 ? Clock() : DigitalClock(),
                   Align(
                       alignment: const Alignment(0, 0.7),
                       child: SizedBox(

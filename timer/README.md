@@ -1,16 +1,27 @@
-# timer
+# Progetto Timer
 
-A new Flutter project.
+## Schermata iniziale
 
-## Getting Started
+In questa schermata selezioniamo l'orario del timer
 
-This project is a starting point for a Flutter application.
+![](selector.png)
 
-A few resources to get you started if this is your first Flutter project:
+## Formato timer 1
+![](format1.png)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Formato timer 2
+![](format2.png)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Timer terminato
+
+Una volta terminato il timer comparirà una notifica per avvertire l'utente, inoltre il timer inizia a lampeggiare nel primo formato accompagnato da una suoneria
+
+![](notification.png)
+
+## Temi
+
+Presente il tema chiaro e il tema scuro
+
+![](lighttheme.png)
+
+![](darktheme.png)

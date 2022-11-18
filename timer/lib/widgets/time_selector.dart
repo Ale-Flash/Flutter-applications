@@ -23,7 +23,7 @@ class _TimeSelectorState extends State<TimeSelector> {
             border: Border(
                 top: BorderSide(
                     color: MyApp.thememe[MyApp.currentTheme]['primary']!,
-                    width: 2),
+                    width: 3),
                 bottom: BorderSide(
                     color: MyApp.thememe[MyApp.currentTheme]['primary']!,
                     width: 3)),
@@ -55,7 +55,7 @@ class _TimeSelectorState extends State<TimeSelector> {
             border: Border(
                 top: BorderSide(
                     color: MyApp.thememe[MyApp.currentTheme]['primary']!,
-                    width: 2),
+                    width: 3),
                 bottom: BorderSide(
                     color: MyApp.thememe[MyApp.currentTheme]['primary']!,
                     width: 3)),
@@ -87,7 +87,7 @@ class _TimeSelectorState extends State<TimeSelector> {
             border: Border(
                 top: BorderSide(
                     color: MyApp.thememe[MyApp.currentTheme]['primary']!,
-                    width: 2),
+                    width: 3),
                 bottom: BorderSide(
                     color: MyApp.thememe[MyApp.currentTheme]['primary']!,
                     width: 3)),
