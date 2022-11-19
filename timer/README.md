@@ -4,24 +4,45 @@
 
 In questa schermata selezioniamo l'orario del timer
 
-![](selector.png)
+<img src="selector.png" width="300"/>
 
 ## Formato timer 1
-![](format1.png)
+
+<img src="format1.png" width="300"/>
 
 ## Formato timer 2
-![](format2.png)
+
+<img src="format2.png" width="300"/>
 
 ## Timer terminato
 
 Una volta terminato il timer comparirà una notifica per avvertire l'utente, inoltre il timer inizia a lampeggiare nel primo formato accompagnato da una suoneria
 
-![](notification.png)
+<img src="notification.png" width="300"/>
 
 ## Temi
 
 Presente il tema chiaro e il tema scuro
 
-![](lighttheme.png)
+<img src="lighttheme.png" width="300"/>
 
-![](darktheme.png)
+<img src="darktheme.png" width="300"/>
+
+## Logica del timer
+
+Generiamo uno `Stream` che ad ogni secondo esegue la funzione `tick`, che essa aggiunge allo `StreamController` i secondi rimanenti
+
+
+```dart
+void tick(_) {
+    if (counter <= 0) {
+    streamController.close();
+    return;
+    }
+    streamController.add(--counter);
+}
+
+void resume() {
+    timer = Timer.periodic(const Duration(seconds: 1), tick);
+}
+```
