@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
+import 'package:slidable_button/slidable_button.dart';
 import 'logic.dart';
 import 'noti.dart';
 import 'settings.dart';
@@ -17,7 +18,7 @@ class MyApp extends StatelessWidget {
     {
       'primary': Color(0xFF6200EE),
       'background': Color(0xFF121212),
-      'secondary': Color(0xFF1E1E1E),
+      'secondary': Color(0xFF424242),
       'text': Color(0xFFC5C5C5),
       'content': Color(0x89000000),
       'selected': Color(0xFFD3D3D3),
@@ -26,8 +27,8 @@ class MyApp extends StatelessWidget {
     {
       'primary': Color(0xFF005FEE),
       'background': Color(0xFFFFFFFF),
-      'text': Color(0xFF131313),
       'secondary': Color(0xFF666666),
+      'text': Color(0xFF131313),
       'content': Color(0xE80F0F0F),
       'selected': Color(0xFF131313),
       'disabled': Color(0xFF666666)
@@ -75,8 +76,6 @@ final FlutterLocalNotificationsPlugin flnp = FlutterLocalNotificationsPlugin();
 
 class _MyHomePageState extends State<MyHomePage> {
   void refresh() {
-    MyApp.format = (MyApp.format + 1) % 2;
-    MyApp.format = (MyApp.format + 1) % 2;
     setState(() {});
   }
 
@@ -127,6 +126,7 @@ class _MyHomePageState extends State<MyHomePage> {
       blink.resume();
     });
     isEnded = true;
+    setState(() {});
     FlutterRingtonePlayer.playAlarm();
   }
 
@@ -193,32 +193,53 @@ class _MyHomePageState extends State<MyHomePage> {
                       alignment: const Alignment(0, 0.7),
                       child: SizedBox(
                         width: 70,
-                        height: 70,
-                        child: ElevatedButton(
-                          // PLAY BUTTON
-                          onPressed: () => setState(() {
-                            if (isEnded) {
-                              stopSnooze();
-                            } else {
-                              MyApp.timer.playPause();
-                            }
-                          }),
-                          style: ButtonStyle(
-                              backgroundColor: MaterialStatePropertyAll<Color>(
-                                  MyApp.thememe[MyApp.currentTheme]
-                                      ['primary']!),
-                              padding: MaterialStateProperty.all(
-                                  const EdgeInsets.all(0)),
-                              shape: MaterialStateProperty.all(
-                                  const CircleBorder())),
-                          child: Icon(
-                              isEnded
-                                  ? Icons.volume_off_outlined
-                                  : MyApp.timer.isPaused()
-                                      ? Icons.play_arrow_rounded
-                                      : Icons.pause_rounded,
-                              size: 50),
-                        ),
+                        height: isEnded ? 150 : 70,
+                        child: (isEnded
+                            ? VerticalSlidableButton(
+                                initialPosition: SlidableButtonPosition.end,
+                                buttonHeight: 70,
+                                width: 70,
+                                height: 150,
+                                onChanged: (state) => setState(() {
+                                  if (state == SlidableButtonPosition.start) {
+                                    stopSnooze();
+                                  }
+                                }),
+                                color: MyApp.thememe[MyApp.currentTheme]
+                                    ['content'],
+                                buttonColor: MyApp.thememe[MyApp.currentTheme]
+                                    ['primary'],
+                                label: Icon(Icons.volume_off_outlined,
+                                    size: 50,
+                                    color: MyApp.thememe[MyApp.currentTheme]
+                                        ['text']),
+                              )
+                            : ElevatedButton(
+                                // PLAY BUTTON
+                                onPressed: () => setState(() {
+                                  if (isEnded) {
+                                    stopSnooze();
+                                  } else {
+                                    MyApp.timer.playPause();
+                                  }
+                                }),
+                                style: ButtonStyle(
+                                    backgroundColor:
+                                        MaterialStatePropertyAll<Color>(
+                                            MyApp.thememe[MyApp.currentTheme]
+                                                ['primary']!),
+                                    padding: MaterialStateProperty.all(
+                                        const EdgeInsets.all(0)),
+                                    shape: MaterialStateProperty.all(
+                                        const CircleBorder())),
+                                child: Icon(
+                                    isEnded
+                                        ? Icons.volume_off_outlined
+                                        : MyApp.timer.isPaused()
+                                            ? Icons.play_arrow_rounded
+                                            : Icons.pause_rounded,
+                                    size: 50),
+                              )),
                       )),
                   Align(
                       alignment: const Alignment(-0.44, 0.675),

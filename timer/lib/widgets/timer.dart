@@ -13,7 +13,7 @@ class _ClockState extends State<Clock> {
   Widget build(BuildContext context) {
     return Stack(children: [
       Align(
-          alignment: const Alignment(0, -.28),
+          alignment: const Alignment(0, -.29),
           // TIME TICKING
           child: SizedBox(
             child: RichText(
@@ -42,7 +42,7 @@ class _ClockState extends State<Clock> {
           )),
       Align(
         alignment: const Alignment(0, -0.4),
-        // TIME TICKING
+        // TIME INDICATOR
         child: SizedBox(
             width: 270,
             height: 270,
