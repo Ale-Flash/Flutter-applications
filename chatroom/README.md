@@ -54,6 +54,18 @@ Il messaggio informativo invece viene gestito dal client, esso può essere di 2 
 
 ## GUI
 
+### Connessione al server
+
+Pagina di connessione al server
+
+<img src="connection_page.png" width="250">
+
+### Pagina principale
+
+L'immagine del gruppo sarà sempre la stessa, essa viene calcolata con una funzione in cui come parametro c'è il nome del gruppo.
+
+<img src="home_page.png" width="250">
+
 ### Cerca gruppo
 
 è possibile ricercare il nome del gruppo, in cui vengono i primi 20 gruppi con il nome simile o uguale, ma è anche possibile ricercare il gruppo tramite l'id aggiungendo all'inizio il di esso il carattere: '@'
@@ -63,6 +75,12 @@ Il messaggio informativo invece viene gestito dal client, esso può essere di 2 
 premendo sul nome del gruppo sarà possibile unirsi
 
 <img src="join_group.png" width="250">
+
+### Creazione del gruppo
+
+In questa pagina è possibile creare un gruppo.
+
+<img src="create_group_page.png" width="250">
 
 ### Copia del messaggio
 
