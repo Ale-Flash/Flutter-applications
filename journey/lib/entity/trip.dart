@@ -1,10 +1,13 @@
-import 'package:journey/entity/stop.dart';
+import 'package:floor/floor.dart';
 
+@entity
 class Trip {
-  List<Stop> stops = [];
+  @PrimaryKey(autoGenerate: true)
+  int? id;
   final String name;
   Trip(this.name);
-  void addStop(Stop stop) {
-    stops.add(stop);
+  DateTime lastUpdate = DateTime.fromMillisecondsSinceEpoch(0);
+  void updateLastTime() {
+    lastUpdate = DateTime.now();
   }
 }

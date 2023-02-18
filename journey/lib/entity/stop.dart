@@ -1,7 +1,10 @@
-import 'package:journey/entity/coords.dart';
+import 'package:floor/floor.dart';
 
+@entity
 class Stop {
+  @PrimaryKey(autoGenerate: true)
+  int? id;
   final String name, info;
-  final Coordinates coords;
-  const Stop(this.name, this.info, this.coords);
+  final double lat, lang;
+  Stop(this.name, this.info, this.lat, this.lang);
 }
