@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 
-class InputForm extends StatefulWidget {
-  InputForm({super.key, required this.label, required this.size});
+class MultipleLinesInputForm extends StatefulWidget {
+  MultipleLinesInputForm({super.key, required this.label, required this.size, required this.lines});
 
   @override
-  State<InputForm> createState() => _InputFormState();
+  State<MultipleLinesInputForm> createState() => _MultipleLinesInputFormState();
   String value = "", label;
   final double size;
+  final int lines;
 }
 
-class _InputFormState extends State<InputForm> {
+class _MultipleLinesInputFormState extends State<MultipleLinesInputForm> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -18,8 +19,10 @@ class _InputFormState extends State<InputForm> {
       child: TextFormField(
         decoration: InputDecoration(
           border: const UnderlineInputBorder(),
+          hintMaxLines: widget.lines,
           labelText: widget.label,
         ),
+        maxLines: widget.lines,
         onChanged: (val) => widget.value = val,
       ),
     );

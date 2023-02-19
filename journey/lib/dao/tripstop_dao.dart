@@ -8,7 +8,7 @@ abstract class TripStopDao {
   Future<List<TripStop>> findAllTripStops();
 
   @Query('SELECT * FROM TripStop WHERE tripID=:id')
-  Stream<List<Stop>> findStopsByTripId(int id);
+  Future<List<Stop>> findStopsByTripId(int id);
 
   @insert
   Future<void> insertTripStop(TripStop tripstop);

@@ -1,3 +1,6 @@
+// ignore_for_file: use_build_context_synchronously
+
+import 'package:journey/main.dart';
 import 'package:journey/widget/input.dart';
 import 'package:flutter/material.dart';
 
@@ -11,19 +14,35 @@ class AddTripPage extends StatefulWidget {
 class _AddTripPageState extends State<AddTripPage> {
   @override
   Widget build(BuildContext context) {
-    InputForm name = InputForm(label: "Enter the Trip name:");
+    InputForm name = InputForm(label: "Enter the Trip name:", size: 50);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Trip'),
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          name,
-          const SizedBox(height: 150),
-          ElevatedButton(onPressed: () {
-            
-          }, child: const Text('CREATE'))
+      body: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        name,
+        const SizedBox(height: 150),
+        ElevatedButton(
+            onPressed: () async {
+              await addTrip(name.value);
+              showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                        title: const Text('Congratulations'),
+                        content: RichText(
+                          text: TextSpan(
+                            style: textStyle,
+                            children: <TextSpan>[
+                              const TextSpan(text: 'Trip '),
+                              TextSpan(text: name.value, style: textStyleBold),
+                              const TextSpan(text: ' created successfully')
+                            ],
+                          ),
+                        ));
+                  });
+            },
+            child: const Text('CREATE'))
       ]),
     );
   }
