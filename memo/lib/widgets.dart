@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'model.dart';
 
 class TodoItem extends StatelessWidget {
@@ -9,8 +10,8 @@ class TodoItem extends StatelessWidget {
   }) : super(key: ObjectKey(todo));
 
   final Todo todo;
-  final void Function() onTodoChanged;
-  final void Function() onTodoDelete;
+  final Function onTodoChanged;
+  final Function onTodoDelete;
 
   TextStyle? _getTextStyle(bool checked) {
     if (!checked) return null;
@@ -25,11 +26,14 @@ class TodoItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       onTap: () {
-        onTodoChanged();
+        onTodoChanged(todo);
       },
-      onLongPress: onTodoDelete,
+      onLongPress: (() {
+        onTodoDelete(todo);
+      }),
       leading: CircleAvatar(child: Text(todo.name[0])),
       title: Text(todo.name, style: _getTextStyle(todo.checked)),
     );
   }
 }
+

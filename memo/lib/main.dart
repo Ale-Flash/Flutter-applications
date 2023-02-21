@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart';
 
+import 'dao.dart';
+import 'database.dart';
 import 'model.dart';
 import 'widgets.dart';
 
 void main() {
-  runApp(const ProviderScope(child: MyApp()));
+  runApp(const MyApp());
 }
+
+late final TodoDao _dao;
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -14,101 +18,143 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'am032 todo list',
+      title: 'am023 todo list floor',
       theme: ThemeData(
         primarySwatch: Colors.indigo,
       ),
-      home: TodoListPage(),
+      home: ChangeNotifierProvider<TodosTracker>(
+        create: (context) => TodosTracker(),
+        child: const MyHomePage(title: 'am023 todo list floor'),
+      ),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
 
-final todoListProvider = StateNotifierProvider<TodoListController, List<Todo>>(
-    (ref) => TodoListController());
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key, required this.title});
 
-class TodoListController extends StateNotifier<List<Todo>> {
-  TodoListController() : super([]);
+  final String title;
 
-  void addTodo(Todo todo) {
-    state = [...state, todo];
-  }
-
-  void removeTodo(Todo todo) {
-    state = [
-      for (final t in state)
-        if (t != todo) t
-    ];
-  }
-
-  void toggle(Todo todo) {
-    state = [
-      for (Todo t in state)
-        if (t == todo) t.toggle() else t
-    ];
-  }
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class TodoListPage extends ConsumerWidget {
-  TodoListPage({Key? key}) : super(key: key);
+class _MyHomePageState extends State<MyHomePage> {
+  late TodosTracker todosTracker;
 
   final TextEditingController _textFieldController = TextEditingController();
 
-  List<Todo> todos = [];
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  initState() {
+    super.initState();
+    _getDao();
+  }
+
+  Future<void> _getDao() async {
+    AppDatabase database =
+        await $FloorAppDatabase.databaseBuilder('app_database.db').build();
+    _dao = database.todoDao;
+    _updateTodos();
+  }
+
+  _updateTodos() {
+    _dao.getTodos().then((todos) {
+      todosTracker.todos.clear();
+      todosTracker.todos.addAll(todos);
+      todosTracker.update();
+    });
+  }
+
+  void _handleTodoChange(Todo todo) {
+    todo.checked = !todo.checked;
+    todosTracker.todos.remove(todo);
+    if (!todo.checked) {
+      todosTracker.todos.add(todo);
+    } else {
+      todosTracker.todos.insert(0, todo);
+    }
+    todosTracker.update();
+    _dao.updateTodo(todo);
+  }
+
+  void _handleTodoDelete(Todo todo) {
+    todosTracker.todos.remove(todo);
+    todosTracker.update();
+    _dao.deleteTodo(todo);
+  }
+
+  Future<void> _displayDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('add todo item'),
+          content: TextField(
+            controller: _textFieldController,
+            decoration: const InputDecoration(hintText: 'type here ...'),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Add'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _addTodoItem(_textFieldController.text);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _addTodoItem(String name) {
+    Todo todo = Todo(id: null, name: name, checked: false);
+    todosTracker.todos.insert(0, todo);
+    todosTracker.update();
+    _dao.insertTodo(todo);
+    _textFieldController.clear();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    todosTracker = Provider.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Todo List"),
+        title: Text(widget.title),
       ),
-      body: Consumer(
-        builder: (context, watch, child) {
-          todos = ref.watch(todoListProvider);
-          return ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              itemCount: todos.length,
-              itemBuilder: (context, index) {
-                return TodoItem(
-                  todo: todos[index],
-                  onTodoChanged: () {
-                    ref.read(todoListProvider.notifier).toggle(todos[index]);
-                  },
-                  onTodoDelete: () {
-                    ref
-                        .read(todoListProvider.notifier)
-                        .removeTodo(todos[index]);
-                  },
-                );
-              });
-        },
+      body: Center(
+        child: ListView.builder(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            itemCount: todosTracker.todos.length,
+            itemBuilder: (context, index) {
+              return TodoItem(
+                todo: todosTracker.todos.reversed.toList()[index],
+                onTodoChanged: _handleTodoChange,
+                onTodoDelete: _handleTodoDelete,
+              );
+            }),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showDialog<void>(
-              context: context,
-              barrierDismissible: false,
-              builder: (BuildContext context) => AlertDialog(
-                    title: const Text('add todo item'),
-                    content: TextField(
-                      controller: _textFieldController,
-                      decoration:
-                          const InputDecoration(hintText: 'type here ...'),
-                    ),
-                    actions: <Widget>[
-                      TextButton(
-                        child: const Text('Add'),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          ref.read(todoListProvider.notifier).addTodo(Todo(
-                              name: _textFieldController.text, checked: false));
-                        },
-                      ),
-                    ],
-                  ));
-          _textFieldController.clear();
-        },
+        onPressed: () => _displayDialog(),
         tooltip: 'Add Item',
         child: const Icon(Icons.add),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _textFieldController.dispose();
+    super.dispose();
+  }
+}
+
+class TodosTracker extends ChangeNotifier {
+  List<Todo> todos = [];
+
+  void update() {
+    notifyListeners();
   }
 }

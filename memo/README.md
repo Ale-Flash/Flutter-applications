@@ -1,43 +1,61 @@
 # memo
 
-## Provider Riverpod
+## Provider
 
-andiamo a creare il nostro provider
-
-```dart
-final todoListProvider = StateNotifierProvider<TodoListController, List<Todo>>((ref) => TodoListController());
-```
-
-definendo prima il controller:
+andiamo ad aggiungere la classe `ChangeNotifierProvider` nella home della `MyApp`
 
 ```dart
-class TodoListController extends StateNotifier<List<Todo>> {
-  TodoListController() : super([]);
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
-  void addTodo(Todo todo) {
-    state = [...state, todo];
-  }
-
-  void removeTodo(Todo todo) {
-    state = [
-      for (final t in state)
-        if (t != todo) t
-    ];
-  }
-
-  void toggle(Todo todo) {
-    state = [
-      for (Todo t in state)
-        if (t == todo) t.toggle() else t
-    ];
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'am023 todo list floor',
+      theme: ThemeData(
+        primarySwatch: Colors.indigo,
+      ),
+      home: ChangeNotifierProvider<TodosTracker>(
+        create: (context) => TodosTracker(),
+        child: const MyHomePage(title: 'am023 todo list floor'),
+      ),
+      debugShowCheckedModeBanner: false,
+    );
   }
 }
 ```
 
-con le sue tre funzioni:
-- `addTodo`: per aggiungere un todo, viene utilizzata l'espansione dell'array con i 3 puntini (`...state`)
-- `removeTodo`: per rimuovere un todo, viene fatto un `for` e semplicemente ometto il valore che è uguale a quello dato come parametro alla funzione
-- `toggle`: per segnare come letto/da leggere, viene utilizzata la nuova funzione aggiunta nella classe del `Todo`
+andiamo quindi a creare la classe del tracker:
+
+```dart
+class TodosTracker extends ChangeNotifier {
+  List<Todo> todos = [];
+
+  void update() {
+    notifyListeners();
+  }
+}
+```
+
+quando viene chiamata la funzione `update` verranno notificati tutti i listeners, in poche parole la pagina viene aggiornata, al posto del precedente `setState` ora viene utilizzata questa funzione.
+
+andiamo a creare il nostro provider
+
+```dart
+late TodosTracker todosTracker;
+```
+
+in cui viene definito nel `build`, quando viene passato il parametro `BuildContext` **context**, quindi:
+
+```dart
+...
+@override
+Widget build(BuildContext context) {
+  todosTracker = Provider.of(context);
+  return Scaffold(...);
+}
+...
+```
 
 ## model
 
@@ -54,43 +72,3 @@ class Todo {
 }
 ```
 definisce il *model* per gli *item*.
-
-è stata aggiunta la funzione `toggle` per utilizzarla nella classe `TodoListController`
-
-```dart
-class TodoListController extends StateNotifier<List<Todo>> {
-  ...
-  void toggle(Todo todo) {
-    state = [
-      for (Todo t in state)
-        if (t == todo) t.toggle() else t
-    ];
-  }
-}
-```
-
-## main
-
-la lista di todos rimane la stessa
-
-```dart
-List<Todo> todos = [];
-```
-
-in cui però viene inizializzata nel build:
-
-```dart
-@override
-Widget build(BuildContext context, WidgetRef ref) {
-  return Scaffold(
-    ...
-    body: Consumer(
-      builder: (context, watch, child) {
-        todos = ref.watch(todoListProvider);
-        return ListView.builder(...);
-      },
-    ),
-    ...
-  );
-}
-```
