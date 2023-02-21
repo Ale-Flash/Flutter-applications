@@ -1,9 +1,7 @@
-// ignore_for_file: prefer_const_constructors, use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:journey/database.dart';
-import 'package:journey/entity/stop.dart';
 import 'package:journey/entity/trip.dart';
 import 'package:journey/widget/add_stop.dart';
 import 'package:journey/widget/add_trip.dart';
@@ -13,16 +11,8 @@ late AppDatabase database;
 
 void main() async {
   runApp(const MyApp());
-  // TODO metterla nel posto giusto, quando viene creato uno stop
-  await Geolocator.requestPermission();
   database = await $FloorAppDatabase.inMemoryDatabaseBuilder().build();
 }
-
-// List<Trip> trips = [];
-
-// Future<void> loadTripList() async {
-//   trips = await database.tripdao.findAllTrips();
-// }
 
 Future<void> addTrip(String name) async {
   await database.tripdao.insertTrip(Trip(null, name));
@@ -73,16 +63,14 @@ const TextStyle textStyleBold =
     TextStyle(color: Colors.black, fontSize: 17, fontWeight: FontWeight.bold);
 
 int selectedTripId = 0;
-List<Stop> stopsSelectedTrip = [];
+late Trip selectedTrip;
+List<DateTime> lastUpdateTripList = [];
 
 String howMuchTimeAgo(DateTime dt) {
   if (dt.millisecondsSinceEpoch == 0) return 'never';
   DateTime current = DateTime.now();
-  if (current.year != dt.year) {
-    return '${current.year - dt.year} year${(current.year - dt.year) == 1 ? '' : 's'} ago';
-  }
-  if (current.month != dt.month) {
-    return '${current.month - dt.month} month${(current.month - dt.month) == 1 ? '' : 's'} ago';
+  if (current.year != dt.year || current.month != dt.month) {
+    return '${dt.day}/${dt.month}/${dt.year}';
   }
   if (current.day != dt.day) {
     return '${current.day - dt.day} day${(current.day - dt.day) == 1 ? '' : 's'} ago';
@@ -97,6 +85,7 @@ String howMuchTimeAgo(DateTime dt) {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  int indexDelete = -1;
   @override
   Widget build(BuildContext context) {
     tripsTracker = Provider.of(context);
@@ -108,58 +97,147 @@ class _MyHomePageState extends State<MyHomePage> {
       body: ListView.builder(
           itemCount: tripsTracker.trips.length,
           itemBuilder: (BuildContext context, int index) => GestureDetector(
-                onTap: () async {
-                  stopsSelectedTrip = await database.tripstopdao
-                      .findStopsByTripId(tripsTracker.trips[index].id!);
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => AddStopPage()));
+                onTap: () {
+                  indexDelete = -1;
+                  tripsTracker.notifyOnly();
+                  selectedTrip = tripsTracker.trips[index];
+                  selectedTripId = selectedTrip.id!;
+
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const AddStopPage()));
+                },
+                onLongPress: () {
+                  if (indexDelete == index) {
+                    indexDelete = -1;
+                  } else {
+                    indexDelete = index;
+                  }
+                  tripsTracker.notifyOnly();
                 },
                 child: Container(
-                    color: Color.fromARGB(255, 255, 255, 255),
+                    decoration: BoxDecoration(
+                        border: Border(
+                            bottom: BorderSide(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .inversePrimary,
+                                width: 2))),
                     height: 80,
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        SizedBox(width: 15),
-                        Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.black87),
-                                color: nameToColor(
-                                    tripsTracker.trips[index].name))),
-                        SizedBox(width: 20),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              tripsTracker.trips[index].name,
-                              style: textStyleBold,
-                            ),
-                            RichText(
-                              text: TextSpan(
-                                style: TextStyle(
-                                    color: Colors.black54, fontSize: 17),
-                                children: <TextSpan>[
-                                  const TextSpan(text: 'last update: '),
-                                  TextSpan(
-                                      text: howMuchTimeAgo(
-                                          tripsTracker.trips[index].lastUpdate),
-                                      style: textStyle),
-                                ],
+                        Row(children: [
+                          const SizedBox(width: 15),
+                          Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: nameToColor(
+                                      tripsTracker.trips[index].name))),
+                          const SizedBox(width: 20),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                tripsTracker.trips[index].name,
+                                style: textStyleBold,
                               ),
-                            )
-                          ],
-                        )
+                              RichText(
+                                text: TextSpan(
+                                  style: const TextStyle(
+                                      color: Colors.black54, fontSize: 17),
+                                  children: <TextSpan>[
+                                    const TextSpan(text: 'last update: '),
+                                    TextSpan(
+                                        text: howMuchTimeAgo(
+                                            lastUpdateTripList[index]),
+                                        style: textStyle),
+                                  ],
+                                ),
+                              )
+                            ],
+                          ),
+                        ]),
+                        (indexDelete == index
+                            ? GestureDetector(
+                                onTap: () async {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        title: const Text("Warning"),
+                                        content: RichText(
+                                          text: TextSpan(
+                                            style: textStyle,
+                                            children: <TextSpan>[
+                                              const TextSpan(
+                                                  text:
+                                                      'Are you sure you want to delete '),
+                                              TextSpan(
+                                                  text: tripsTracker
+                                                      .trips[indexDelete].name,
+                                                  style: textStyleBold),
+                                              const TextSpan(text: '?'),
+                                            ],
+                                          ),
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            child: const Text("YES"),
+                                            onPressed: () async {
+                                              await database.tripstopdao
+                                                  .deleteAllTripStopsById(
+                                                      tripsTracker
+                                                          .trips[indexDelete]
+                                                          .id!);
+                                              await database.tripdao
+                                                  .deleteAllTripsById(
+                                                      tripsTracker
+                                                          .trips[indexDelete]
+                                                          .id!);
+                                              indexDelete = -1;
+                                              tripsTracker.update();
+                                              Navigator.of(context).pop();
+                                            },
+                                          ),
+                                          TextButton(
+                                            child: const Text("NO"),
+                                            onPressed: () {
+                                              indexDelete = -1;
+                                              tripsTracker.notifyOnly();
+                                              Navigator.of(context).pop();
+                                            },
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                },
+                                child: Container(
+                                  width: 80,
+                                  height: 80,
+                                  color: Colors.red,
+                                  child: const Icon(Icons.delete_outline,
+                                      color: Colors.white),
+                                ),
+                              )
+                            : const SizedBox(
+                                width: 80,
+                                height: 80,
+                              ))
                       ],
                     )),
               )),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO pagina crea trips
-          Navigator.push(
-              context, MaterialPageRoute(builder: (context) => AddTripPage()));
+          indexDelete = -1;
+          tripsTracker.notifyOnly();
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => const AddTripPage()));
         },
         child: const Icon(Icons.add),
       ),
@@ -170,9 +248,25 @@ class _MyHomePageState extends State<MyHomePage> {
 class TripsTracker extends ChangeNotifier {
   List<Trip> _trips = [];
   List<Trip> get trips => _trips;
+  int updating = 0;
 
   Future<void> update() async {
-    _trips = await database.tripdao.findAllTrips();
+    ++updating;
+    _trips = (await database.tripdao.findAllTripsOrdered());
+    lastUpdateTripList =
+        List.filled(_trips.length, DateTime.fromMillisecondsSinceEpoch(0));
+    for (int i = 0; i < _trips.length; ++i) {
+      lastUpdateTripList[i] = DateTime.fromMillisecondsSinceEpoch(
+          await database.tripstopdao.getLastUpdate(_trips[i].id!) ?? 0);
+    }
+    notifyListeners();
+    if (updating == 1) {
+      Future.delayed(const Duration(minutes: 1), update);
+    }
+    --updating;
+  }
+
+  void notifyOnly() {
     notifyListeners();
   }
 }

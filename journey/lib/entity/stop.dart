@@ -6,5 +6,6 @@ class Stop {
   int? id;
   final String name, info;
   final double lat, lang;
-  Stop(this.id, this.name, this.info, this.lat, this.lang);
+  final DateTime datetime;
+  Stop(this.id, this.name, this.info, this.lat, this.lang, this.datetime);
 }

@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 
 class InputForm extends StatefulWidget {
-  InputForm({super.key, required this.label, required this.size});
+  InputForm(
+      {super.key,
+      required this.label,
+      required this.size,
+      required this.lines});
 
   @override
   State<InputForm> createState() => _InputFormState();
   String value = "", label;
   final double size;
+  TextEditingController txt = TextEditingController();
+  final int lines;
 }
 
 class _InputFormState extends State<InputForm> {
@@ -20,7 +26,11 @@ class _InputFormState extends State<InputForm> {
           border: const UnderlineInputBorder(),
           labelText: widget.label,
         ),
-        onChanged: (val) => widget.value = val,
+        onChanged: (val) {
+          widget.value = val;
+        },
+        controller: widget.txt,
+        maxLines: widget.lines,
       ),
     );
   }

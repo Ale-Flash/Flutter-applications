@@ -89,11 +89,11 @@ class _$AppDatabase extends AppDatabase {
       },
       onCreate: (database, version) async {
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `Trip` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT NOT NULL, `lastUpdate` INTEGER NOT NULL)');
+            'CREATE TABLE IF NOT EXISTS `Trip` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT NOT NULL)');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `Stop` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT NOT NULL, `info` TEXT NOT NULL, `lat` REAL NOT NULL, `lang` REAL NOT NULL)');
+            'CREATE TABLE IF NOT EXISTS `Stop` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT NOT NULL, `info` TEXT NOT NULL, `lat` REAL NOT NULL, `lang` REAL NOT NULL, `datetime` INTEGER NOT NULL)');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `TripStop` (`tripID` INTEGER NOT NULL, `stopID` INTEGER NOT NULL, PRIMARY KEY (`tripID`))');
+            'CREATE TABLE IF NOT EXISTS `TripStop` (`tripID` INTEGER NOT NULL, `stopID` INTEGER NOT NULL, PRIMARY KEY (`tripID`, `stopID`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -125,11 +125,7 @@ class _$TripDao extends TripDao {
         _tripInsertionAdapter = InsertionAdapter(
             database,
             'Trip',
-            (Trip item) => <String, Object?>{
-                  'id': item.id,
-                  'name': item.name,
-                  'lastUpdate': _dateTimeConverter.encode(item.lastUpdate)
-                },
+            (Trip item) => <String, Object?>{'id': item.id, 'name': item.name},
             changeListener);
 
   final sqflite.DatabaseExecutor database;
@@ -143,6 +139,14 @@ class _$TripDao extends TripDao {
   @override
   Future<List<Trip>> findAllTrips() async {
     return _queryAdapter.queryList('SELECT * FROM Trip',
+        mapper: (Map<String, Object?> row) =>
+            Trip(row['id'] as int?, row['name'] as String));
+  }
+
+  @override
+  Future<List<Trip>> findAllTripsOrdered() async {
+    return _queryAdapter.queryList(
+        'SELECT t.* FROM Trip t LEFT JOIN TripStop ts ON t.id=ts.tripID LEFT JOIN Stop s ON ts.stopID=s.id GROUP BY t.id ORDER BY s.datetime DESC',
         mapper: (Map<String, Object?> row) =>
             Trip(row['id'] as int?, row['name'] as String));
   }
@@ -173,6 +177,12 @@ class _$TripDao extends TripDao {
   }
 
   @override
+  Future<void> deleteAllTripsById(int id) async {
+    await _queryAdapter
+        .queryNoReturn('DELETE FROM Trip WHERE id=?1', arguments: [id]);
+  }
+
+  @override
   Future<void> insertTrip(Trip trip) async {
     await _tripInsertionAdapter.insert(trip, OnConflictStrategy.abort);
   }
@@ -191,7 +201,8 @@ class _$StopDao extends StopDao {
                   'name': item.name,
                   'info': item.info,
                   'lat': item.lat,
-                  'lang': item.lang
+                  'lang': item.lang,
+                  'datetime': _dateTimeConverter.encode(item.datetime)
                 },
             changeListener);
 
@@ -211,21 +222,21 @@ class _$StopDao extends StopDao {
             row['name'] as String,
             row['info'] as String,
             row['lat'] as double,
-            row['lang'] as double));
+            row['lang'] as double,
+            _dateTimeConverter.decode(row['datetime'] as int)));
   }
 
   @override
-  Stream<Stop?> findStopById(int id) {
-    return _queryAdapter.queryStream('SELECT * FROM Stop WHERE id=?1',
+  Future<Stop?> findStopById(int id) async {
+    return _queryAdapter.query('SELECT * FROM Stop WHERE id=?1',
         mapper: (Map<String, Object?> row) => Stop(
             row['id'] as int?,
             row['name'] as String,
             row['info'] as String,
             row['lat'] as double,
-            row['lang'] as double),
-        arguments: [id],
-        queryableName: 'Stop',
-        isView: false);
+            row['lang'] as double,
+            _dateTimeConverter.decode(row['datetime'] as int)),
+        arguments: [id]);
   }
 
   @override
@@ -236,7 +247,8 @@ class _$StopDao extends StopDao {
             row['name'] as String,
             row['info'] as String,
             row['lat'] as double,
-            row['lang'] as double),
+            row['lang'] as double,
+            _dateTimeConverter.decode(row['datetime'] as int)),
         arguments: [name],
         queryableName: 'Stop',
         isView: false);
@@ -248,8 +260,9 @@ class _$StopDao extends StopDao {
   }
 
   @override
-  Future<void> insertStop(Stop stop) async {
-    await _stopInsertionAdapter.insert(stop, OnConflictStrategy.abort);
+  Future<int> insertStop(Stop stop) {
+    return _stopInsertionAdapter.insertAndReturnId(
+        stop, OnConflictStrategy.abort);
   }
 }
 
@@ -283,19 +296,39 @@ class _$TripStopDao extends TripStopDao {
 
   @override
   Future<List<Stop>> findStopsByTripId(int id) async {
-    return _queryAdapter.queryList('SELECT * FROM TripStop WHERE tripID=?1',
-        mapper: (Map<String, Object?> row) => Stop(
-            row['id'] as int?,
-            row['name'] as String,
-            row['info'] as String,
-            row['lat'] as double,
-            row['lang'] as double),
+    return _queryAdapter.queryList(
+        'SELECT s.* FROM TripStop ts INNER JOIN Stop s ON ts.stopID=s.id WHERE tripID=?1 ORDER BY s.datetime ASC',
+        mapper: (Map<String, Object?> row) => Stop(row['id'] as int?, row['name'] as String, row['info'] as String, row['lat'] as double, row['lang'] as double, _dateTimeConverter.decode(row['datetime'] as int)),
+        arguments: [id]);
+  }
+
+  @override
+  Future<int?> getLastUpdate(int id) async {
+    return _queryAdapter.query(
+        'SELECT s.datetime FROM TripStop ts INNER JOIN Stop s ON ts.stopID=s.id WHERE ts.tripID=?1 AND s.datetime=(SELECT MAX(s.datetime) FROM TripStop ts INNER JOIN Stop s ON ts.stopID=s.id WHERE ts.tripID=?1)',
+        mapper: (Map<String, Object?> row) => row.values.first as int,
         arguments: [id]);
   }
 
   @override
   Future<void> deleteAllTripStops() async {
     await _queryAdapter.queryNoReturn('DELETE FROM TripStop');
+  }
+
+  @override
+  Future<void> deleteAllTripStopsById(int id) async {
+    await _queryAdapter
+        .queryNoReturn('DELETE FROM TripStop WHERE tripID=?1', arguments: [id]);
+  }
+
+  @override
+  Future<void> deleteStopById(
+    int tripID,
+    int stopID,
+  ) async {
+    await _queryAdapter.queryNoReturn(
+        'DELETE FROM TripStop WHERE tripID=?1 AND stopID=?2',
+        arguments: [tripID, stopID]);
   }
 
   @override

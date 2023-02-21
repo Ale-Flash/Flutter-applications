@@ -14,14 +14,14 @@ class AddTripPage extends StatefulWidget {
 class _AddTripPageState extends State<AddTripPage> {
   @override
   Widget build(BuildContext context) {
-    InputForm name = InputForm(label: "Enter the Trip name:", size: 50);
+    InputForm name = InputForm(label: "Enter the Trip name:", size: 80, lines: 1);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Trip'),
       ),
       body: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         name,
-        const SizedBox(height: 150),
+        const SizedBox(height: 120),
         ElevatedButton(
             onPressed: () async {
               await addTrip(name.value);
@@ -41,6 +41,7 @@ class _AddTripPageState extends State<AddTripPage> {
                           ),
                         ));
                   });
+              name.txt.text = "";
             },
             child: const Text('CREATE'))
       ]),

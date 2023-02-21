@@ -7,13 +7,13 @@ abstract class StopDao {
   Future<List<Stop>> findAllStops();
 
   @Query('SELECT * FROM Stop WHERE id=:id')
-  Stream<Stop?> findStopById(int id);
+  Future<Stop?> findStopById(int id);
 
   @Query('SELECT * FROM Stop WHERE name=:name')
   Stream<Stop?> findStopByName(String name);
 
   @insert
-  Future<void> insertStop(Stop stop);
+  Future<int> insertStop(Stop stop);
 
   @Query('DELETE FROM Stop')
   Future<void> deleteAllStops();
