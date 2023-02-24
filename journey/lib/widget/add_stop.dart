@@ -1,11 +1,13 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:journey/entity/stop.dart';
 import 'package:journey/entity/tripstops.dart';
 import 'package:journey/widget/input.dart';
 import 'package:flutter/material.dart';
 import 'package:journey/main.dart';
+import 'package:journey/widget/map.dart';
 import 'package:journey/widget/numeric_input.dart';
 import 'package:provider/provider.dart';
 
@@ -42,8 +44,35 @@ late StopsTracker stopsTracker;
 const TextStyle textStyleGrey =
     TextStyle(color: Color(0xFF3E3E3E), fontSize: 12);
 const TextStyle textStyleInfos = TextStyle(color: Colors.black, fontSize: 15);
+bool map = false;
+Stop? selectedStop;
+Coords? mapPosition;
 
 class _AddStopPageState extends State<AddStopPage1> {
+  Set<Marker> markerFiller() {
+    Set<Marker> res =
+        Set.from(List.generate(stopsTracker.stops.length, (index) {
+      return Marker(
+        markerId: MarkerId(stopsTracker.stops[index].id.toString()),
+        position: LatLng(
+            stopsTracker.stops[index].lat, stopsTracker.stops[index].lang),
+      );
+    }));
+    res.add(Marker(
+      markerId: const MarkerId("positionSelector"),
+      position: selectedStop == null
+          ? const LatLng(41.4575846, 12.6610751)
+          : LatLng(selectedStop!.lat, selectedStop!.lang),
+      draggable: true,
+      onDragEnd: (value) {
+        // value is the new position
+        mapPosition = Coords(value.latitude, value.longitude);
+      },
+      icon: BitmapDescriptor.defaultMarker,
+    ));
+    return res;
+  }
+
   bool loading = false;
   @override
   Widget build(BuildContext context) {
@@ -57,116 +86,155 @@ class _AddStopPageState extends State<AddStopPage1> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Stop'),
+        actions: [
+          GestureDetector(
+            onTap: () {
+              map = !map;
+              stopsTracker.reload();
+            },
+            child: Container(
+              width: 50,
+              height: 50,
+              color: Colors.red,
+              child: Icon(map ? Icons.add : Icons.map),
+            ),
+          )
+        ],
       ),
       body: ListView.builder(
           itemCount: stopsTracker.stops.length + 1,
           itemBuilder: (context, index) {
             if (index == 0) {
-              return Container(
-                margin: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                    border: Border.all(
-                        color: Theme.of(context).colorScheme.inversePrimary,
-                        width: 2),
-                    borderRadius: const BorderRadius.all(Radius.circular(20))),
-                height: 240,
-                child: Column(children: [
-                  Row(
-                    children: [
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.67,
-                        child: name,
-                      ),
-                      ElevatedButton(
-                          onPressed: () async {
-                            // check if has permission
-                            LocationPermission permission =
-                                await Geolocator.checkPermission();
-                            if (permission == LocationPermission.denied) {
-                              await Geolocator.requestPermission();
-                            }
-                            permission = await Geolocator.checkPermission();
-
-                            if (permission != LocationPermission.denied) {
-                              Position? p = await getLocation();
-                              if (p != null) {
-                                lat.txt.text = p.latitude.toString();
-                                long.txt.text = p.longitude.toString();
-                                lat.value = p.latitude.toString();
-                                long.value = p.longitude.toString();
+              if (map) { // TODO make new page perché se no non si riesce a spostare nella lista
+                return SizedBox(
+                  height: 300,
+                  child: GoogleMap(
+                    initialCameraPosition: CameraPosition(
+                      target: selectedStop == null
+                          ? const LatLng(41.4575846, 12.6610751)
+                          : LatLng(selectedStop!.lat, selectedStop!.lang),
+                      zoom: 14,
+                    ),
+                    markers: markerFiller(),
+                  ),
+                );
+              } else {
+                return Container(
+                  margin: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                      border: Border.all(
+                          color: Theme.of(context).colorScheme.inversePrimary,
+                          width: 2),
+                      borderRadius:
+                          const BorderRadius.all(Radius.circular(20))),
+                  height: 240,
+                  child: Column(children: [
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.67,
+                          child: name,
+                        ),
+                        ElevatedButton(
+                            onPressed: () async {
+                              // check if has permission
+                              LocationPermission permission =
+                                  await Geolocator.checkPermission();
+                              if (permission == LocationPermission.denied) {
+                                await Geolocator.requestPermission();
                               }
-                            }
-                          },
-                          child: const Text('set position'))
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.47,
-                        child: lat,
-                      ),
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.47,
-                        child: long,
-                      ),
-                    ],
-                  ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.77,
-                        child: info,
-                      ),
-                      ElevatedButton(
-                          onPressed: () async {
-                            // check parameters
-                            if (name.value.isEmpty ||
-                                lat.value.isEmpty ||
-                                long.value.isEmpty ||
-                                info.value.isEmpty ||
-                                double.tryParse(lat.value) == null ||
-                                double.tryParse(long.value) == null) {
-                              showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return const AlertDialog(
-                                        title: Text('Error'),
-                                        content: Text(
-                                            'Warning not all fields are completed, please fill them before saving'));
-                                  });
-                            } else {
-                              int stopId = await database.stopdao.insertStop(
-                                  Stop(
-                                      null,
-                                      name.value,
-                                      info.value,
-                                      double.parse(lat.value),
-                                      double.parse(long.value),
-                                      DateTime.now()));
+                              permission = await Geolocator.checkPermission();
 
-                              await database.tripstopdao.insertTripStop(
-                                  TripStop(selectedTripId, stopId));
-                              stopsTracker.update();
-                              // delete paramenters
-                              name.txt.text = "";
-                              lat.txt.text = "";
-                              long.txt.text = "";
-                              info.txt.text = "";
-                              name.value = "";
-                              lat.value = "";
-                              long.value = "";
-                              info.value = "";
-                            }
-                          },
-                          child: const Text('save')),
-                    ],
-                  ),
-                ]),
-              );
+                              if (permission != LocationPermission.denied) {
+                                Position? p = await getLocation();
+                                if (p != null) {
+                                  lat.txt.text = p.latitude.toString();
+                                  long.txt.text = p.longitude.toString();
+                                  lat.value = p.latitude.toString();
+                                  long.value = p.longitude.toString();
+                                }
+                              }
+                            },
+                            child: const Text('set position'))
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.47,
+                          child: lat,
+                        ),
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.47,
+                          child: long,
+                        ),
+                      ],
+                    ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.77,
+                          child: info,
+                        ),
+                        ElevatedButton(
+                            onPressed: () async {
+                              // check parameters
+                              if (name.value.isEmpty ||
+                                  lat.value.isEmpty ||
+                                  long.value.isEmpty ||
+                                  info.value.isEmpty ||
+                                  double.tryParse(lat.value) == null ||
+                                  double.tryParse(long.value) == null) {
+                                showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return const AlertDialog(
+                                          title: Text('Error'),
+                                          content: Text(
+                                              'Warning not all fields are completed, please fill them before saving'));
+                                    });
+                              } else {
+                                int stopId = await database.stopdao.insertStop(
+                                    Stop(
+                                        null,
+                                        name.value,
+                                        info.value,
+                                        double.parse(lat.value),
+                                        double.parse(long.value),
+                                        DateTime.now()));
+
+                                await database.tripstopdao.insertTripStop(
+                                    TripStop(selectedTripId, stopId));
+                                stopsTracker.update();
+                                // delete paramenters
+                                name.txt.text = "";
+                                lat.txt.text = "";
+                                long.txt.text = "";
+                                info.txt.text = "";
+                                name.value = "";
+                                lat.value = "";
+                                long.value = "";
+                                info.value = "";
+                              }
+                            },
+                            child: const Text('save')),
+                      ],
+                    ),
+                  ]),
+                );
+              }
             } else {
               return GestureDetector(
+                  onTap: () {
+                    selectedStop = stopsTracker.stops[index - 1];
+                    print(selectedStop!.name);
+                    if (map) stopsTracker.reload();
+
+                    // TODO FIXME
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => const MapScreen()));
+                  },
                   onLongPress: () {
                     showDialog(
                         context: context,
@@ -279,4 +347,13 @@ class StopsTracker extends ChangeNotifier {
     notifyListeners();
     tripsTracker.update();
   }
+
+  void reload() {
+    notifyListeners();
+  }
+}
+
+class Coords {
+  final double lat, long;
+  const Coords(this.lat, this.long);
 }
