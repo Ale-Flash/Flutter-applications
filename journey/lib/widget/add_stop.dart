@@ -49,29 +49,7 @@ Stop? selectedStop;
 Coords? mapPosition;
 
 class _AddStopPageState extends State<AddStopPage1> {
-  Set<Marker> markerFiller() {
-    Set<Marker> res =
-        Set.from(List.generate(stopsTracker.stops.length, (index) {
-      return Marker(
-        markerId: MarkerId(stopsTracker.stops[index].id.toString()),
-        position: LatLng(
-            stopsTracker.stops[index].lat, stopsTracker.stops[index].lang),
-      );
-    }));
-    res.add(Marker(
-      markerId: const MarkerId("positionSelector"),
-      position: selectedStop == null
-          ? const LatLng(41.4575846, 12.6610751)
-          : LatLng(selectedStop!.lat, selectedStop!.lang),
-      draggable: true,
-      onDragEnd: (value) {
-        // value is the new position
-        mapPosition = Coords(value.latitude, value.longitude);
-      },
-      icon: BitmapDescriptor.defaultMarker,
-    ));
-    return res;
-  }
+  
 
   bool loading = false;
   @override
@@ -89,6 +67,10 @@ class _AddStopPageState extends State<AddStopPage1> {
         actions: [
           GestureDetector(
             onTap: () {
+              Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const MapScreen()));
               map = !map;
               stopsTracker.reload();
             },
@@ -105,20 +87,20 @@ class _AddStopPageState extends State<AddStopPage1> {
           itemCount: stopsTracker.stops.length + 1,
           itemBuilder: (context, index) {
             if (index == 0) {
-              if (map) { // TODO make new page perché se no non si riesce a spostare nella lista
-                return SizedBox(
-                  height: 300,
-                  child: GoogleMap(
-                    initialCameraPosition: CameraPosition(
-                      target: selectedStop == null
-                          ? const LatLng(41.4575846, 12.6610751)
-                          : LatLng(selectedStop!.lat, selectedStop!.lang),
-                      zoom: 14,
-                    ),
-                    markers: markerFiller(),
-                  ),
-                );
-              } else {
+              // if (map) { // TODO make new page perché se no non si riesce a spostare nella lista
+              //   return SizedBox(
+              //     height: 300,
+              //     child: GoogleMap(
+              //       initialCameraPosition: CameraPosition(
+              //         target: selectedStop == null
+              //             ? const LatLng(41.4575846, 12.6610751)
+              //             : LatLng(selectedStop!.lat, selectedStop!.lang),
+              //         zoom: 14,
+              //       ),
+              //       markers: markerFiller(),
+              //     ),
+              //   );
+              // } else {
                 return Container(
                   margin: const EdgeInsets.all(2),
                   decoration: BoxDecoration(
@@ -223,7 +205,7 @@ class _AddStopPageState extends State<AddStopPage1> {
                     ),
                   ]),
                 );
-              }
+              // }
             } else {
               return GestureDetector(
                   onTap: () {
