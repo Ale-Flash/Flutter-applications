@@ -47,12 +47,29 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+Color betterColor(Color c) {
+  return (c.red * 0.3 + c.green * 0.6 + c.blue * 0.1) < 186
+      ? Colors.white
+      : Colors.black;
+}
+
 Color nameToColor(String name) {
+  int value = name.hashCode;
   List<int> c = [0, 0, 0];
-  for (int i = 0; i < name.length; ++i) {
-    c[i % 3] += name.codeUnitAt(i);
+  switch (value % 3) {
+    case 0:
+      c[1] = value % 1000 % 256;
+      c[2] = value ~/ 10000 % 1000 % 256;
+      break;
+    case 1:
+      c[0] = value ~/ 10000 % 1000 % 256;
+      c[2] = value % 1000 % 256;
+      break;
+    case 2:
+      c[0] = value % 1000 % 256;
+      c[1] = value ~/ 10000 % 1000 % 256;
+      break;
   }
-  c = c.map((e) => e % 256).toList();
   return Color.fromARGB(255, c[0], c[1], c[2]);
 }
 
@@ -129,14 +146,22 @@ class _MyHomePageState extends State<MyHomePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(children: [
-                          const SizedBox(width: 15),
-                          Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: nameToColor(
-                                      tripsTracker.trips[index].name))),
+                          const SizedBox(width: 10),
+                          SizedBox(
+                            width: 50,
+                            height: 50,
+                            child: CircleAvatar(
+                                backgroundColor:
+                                    nameToColor(tripsTracker.trips[index].name),
+                                foregroundColor: betterColor(nameToColor(
+                                    tripsTracker.trips[index].name)),
+                                child: Text(
+                                  tripsTracker.trips[index].name.isEmpty
+                                      ? ''
+                                      : tripsTracker.trips[index].name[0],
+                                  style: const TextStyle(fontSize: 23),
+                                )),
+                          ),
                           const SizedBox(width: 20),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,6 +264,7 @@ class _MyHomePageState extends State<MyHomePage> {
           Navigator.push(context,
               MaterialPageRoute(builder: (context) => const AddTripPage()));
         },
+        shape: const CircleBorder(),
         child: const Icon(Icons.add),
       ),
     );

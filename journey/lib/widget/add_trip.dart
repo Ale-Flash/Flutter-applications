@@ -14,7 +14,8 @@ class AddTripPage extends StatefulWidget {
 class _AddTripPageState extends State<AddTripPage> {
   @override
   Widget build(BuildContext context) {
-    InputForm name = InputForm(label: "Enter the Trip name:", size: 80, lines: 1);
+    InputForm name =
+        InputForm(label: "Enter the Trip name:", size: 80, lines: 1);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Trip'),
@@ -24,6 +25,16 @@ class _AddTripPageState extends State<AddTripPage> {
         const SizedBox(height: 120),
         ElevatedButton(
             onPressed: () async {
+              if (name.value.isEmpty) {
+                showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return const AlertDialog(
+                          title: Text('Error'),
+                          content: Text('please insert the name of the Trip'));
+                    });
+                return;
+              }
               await addTrip(name.value);
               showDialog(
                   context: context,

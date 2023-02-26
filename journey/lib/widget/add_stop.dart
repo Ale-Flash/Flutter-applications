@@ -1,15 +1,17 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:journey/entity/stop.dart';
-import 'package:journey/entity/tripstops.dart';
-import 'package:journey/widget/input.dart';
-import 'package:flutter/material.dart';
+import 'dart:developer';
+
 import 'package:journey/main.dart';
-import 'package:journey/widget/map.dart';
-import 'package:journey/widget/numeric_input.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:journey/widget/map.dart';
+import 'package:journey/entity/stop.dart';
+import 'package:journey/widget/input.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:journey/entity/tripstops.dart';
+import 'package:place_picker/place_picker.dart';
+import 'package:journey/widget/numeric_input.dart';
 
 class AddStopPage extends StatelessWidget {
   const AddStopPage({super.key});
@@ -33,6 +35,7 @@ Future<Position?> getLocation() async {
     Position position = await Geolocator.getCurrentPosition(
             desiredAccuracy: LocationAccuracy.high)
         .timeout(const Duration(seconds: 5));
+    lastCoords = Coords(position.latitude, position.longitude);
     return position;
   } catch (e) {
     debugPrint('Error: $e');
@@ -40,24 +43,22 @@ Future<Position?> getLocation() async {
   return null;
 }
 
+Coords lastCoords = const Coords(45.4398, 12.3319);
 late StopsTracker stopsTracker;
 const TextStyle textStyleGrey =
     TextStyle(color: Color(0xFF3E3E3E), fontSize: 12);
 const TextStyle textStyleInfos = TextStyle(color: Colors.black, fontSize: 15);
-bool map = false;
 Stop? selectedStop;
 Coords? mapPosition;
 
 class _AddStopPageState extends State<AddStopPage1> {
-  
-
   bool loading = false;
   @override
   Widget build(BuildContext context) {
     InputForm name = InputForm(label: "Name", size: 60, lines: 1);
     NumericInputForm lat = NumericInputForm(label: "Latitude", size: 60);
     NumericInputForm long = NumericInputForm(label: "Longitude", size: 60);
-    InputForm info = InputForm(label: "Infos", size: 90, lines: 3);
+    InputForm info = InputForm(label: "Info", size: 90, lines: 3);
 
     stopsTracker = Provider.of(context);
 
@@ -67,18 +68,14 @@ class _AddStopPageState extends State<AddStopPage1> {
         actions: [
           GestureDetector(
             onTap: () {
-              Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const MapScreen()));
-              map = !map;
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => const MapScreen()));
               stopsTracker.reload();
             },
-            child: Container(
+            child: const SizedBox(
               width: 50,
               height: 50,
-              color: Colors.red,
-              child: Icon(map ? Icons.add : Icons.map),
+              child: Icon(Icons.map),
             ),
           )
         ],
@@ -87,131 +84,191 @@ class _AddStopPageState extends State<AddStopPage1> {
           itemCount: stopsTracker.stops.length + 1,
           itemBuilder: (context, index) {
             if (index == 0) {
-              // if (map) { // TODO make new page perché se no non si riesce a spostare nella lista
-              //   return SizedBox(
-              //     height: 300,
-              //     child: GoogleMap(
-              //       initialCameraPosition: CameraPosition(
-              //         target: selectedStop == null
-              //             ? const LatLng(41.4575846, 12.6610751)
-              //             : LatLng(selectedStop!.lat, selectedStop!.lang),
-              //         zoom: 14,
-              //       ),
-              //       markers: markerFiller(),
-              //     ),
-              //   );
-              // } else {
-                return Container(
-                  margin: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                      border: Border.all(
-                          color: Theme.of(context).colorScheme.inversePrimary,
-                          width: 2),
-                      borderRadius:
-                          const BorderRadius.all(Radius.circular(20))),
-                  height: 240,
-                  child: Column(children: [
-                    Row(
-                      children: [
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.67,
-                          child: name,
-                        ),
-                        ElevatedButton(
-                            onPressed: () async {
-                              // check if has permission
-                              LocationPermission permission =
-                                  await Geolocator.checkPermission();
-                              if (permission == LocationPermission.denied) {
-                                await Geolocator.requestPermission();
-                              }
-                              permission = await Geolocator.checkPermission();
+              return Container(
+                margin: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                    border: Border.all(
+                        color: Theme.of(context).colorScheme.inversePrimary,
+                        width: 2),
+                    borderRadius: const BorderRadius.all(Radius.circular(20))),
+                height: 240,
+                child: Column(children: [
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.62,
+                        child: name,
+                      ),
+                      ElevatedButton(
+                          onPressed: () async {
+                            // check if has permission
+                            LocationPermission permission =
+                                await Geolocator.checkPermission();
+                            if (permission == LocationPermission.denied) {
+                              await Geolocator.requestPermission();
+                            }
+                            permission = await Geolocator.checkPermission();
 
-                              if (permission != LocationPermission.denied) {
-                                Position? p = await getLocation();
-                                if (p != null) {
-                                  lat.txt.text = p.latitude.toString();
-                                  long.txt.text = p.longitude.toString();
-                                  lat.value = p.latitude.toString();
-                                  long.value = p.longitude.toString();
-                                }
+                            if (permission != LocationPermission.denied) {
+                              Position? p = await getLocation();
+                              if (p != null) {
+                                lat.txt.text = p.latitude.toString();
+                                long.txt.text = p.longitude.toString();
+                                lat.value = p.latitude.toString();
+                                long.value = p.longitude.toString();
                               }
-                            },
-                            child: const Text('set position'))
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.47,
-                          child: lat,
-                        ),
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.47,
-                          child: long,
-                        ),
-                      ],
-                    ),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.77,
-                          child: info,
-                        ),
-                        ElevatedButton(
-                            onPressed: () async {
-                              // check parameters
-                              if (name.value.isEmpty ||
-                                  lat.value.isEmpty ||
-                                  long.value.isEmpty ||
-                                  info.value.isEmpty ||
-                                  double.tryParse(lat.value) == null ||
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                              shape: const CircleBorder()),
+                          child: const Icon(Icons.location_on)),
+                      ElevatedButton(
+                          onPressed: () async {
+                            LocationResult result = await Navigator.of(context)
+                                .push(MaterialPageRoute(
+                                    builder: (context) => PlacePicker(
+                                          googleAPiKey,
+                                          displayLocation: LatLng(
+                                              lastCoords.lat, lastCoords.long),
+                                        )));
+
+                            // Handle the result in your way
+                            if (result.latLng != null) {
+                              String value1 =
+                                      result.latLng!.latitude.toString(),
+                                  value2 = result.latLng!.longitude.toString();
+                              if (value1.length > 10) {
+                                value1 = value1.substring(0, 10);
+                              }
+                              if (value2.length > 10) {
+                                value2 = value2.substring(0, 10);
+                              }
+                              lat.txt.text = value1;
+                              long.txt.text = value2;
+                              lat.value = value1;
+                              long.value = value2;
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                              shape: const CircleBorder()),
+                          child: const Icon(Icons.map))
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.47,
+                        child: lat,
+                      ),
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.47,
+                        child: long,
+                      ),
+                    ],
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.77,
+                        child: info,
+                      ),
+                      ElevatedButton(
+                          onPressed: () async {
+                            // check parameters
+                            if (name.value.isEmpty ||
+                                lat.value.isEmpty ||
+                                long.value.isEmpty ||
+                                info.value.isEmpty) {
+                              showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                        title: const Text('Error',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold)),
+                                        content: RichText(
+                                          // ignore: prefer_const_constructors
+                                          text: TextSpan(
+                                            style: textStyle,
+                                            children: <TextSpan>[
+                                              const TextSpan(
+                                                  text:
+                                                      'Warning the following fields are not filled:\n'),
+                                              TextSpan(
+                                                  text: name.value.isEmpty
+                                                      ? 'name  '
+                                                      : '',
+                                                  style: textStyleBold),
+                                              TextSpan(
+                                                  text: lat.value.isEmpty
+                                                      ? 'latitude  '
+                                                      : '',
+                                                  style: textStyleBold),
+                                              TextSpan(
+                                                  text: long.value.isEmpty
+                                                      ? 'longitude  '
+                                                      : '',
+                                                  style: textStyleBold),
+                                              TextSpan(
+                                                  text: info.value.isEmpty
+                                                      ? 'info'
+                                                      : '',
+                                                  style: textStyleBold),
+                                            ],
+                                          ),
+                                        ));
+                                  });
+                            } else {
+                              if (double.tryParse(lat.value) == null ||
                                   double.tryParse(long.value) == null) {
                                 showDialog(
                                     context: context,
                                     builder: (BuildContext context) {
                                       return const AlertDialog(
-                                          title: Text('Error'),
+                                          title: Text('Error',
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold)),
                                           content: Text(
-                                              'Warning not all fields are completed, please fill them before saving'));
+                                              'Error in parsing the numbers'));
                                     });
-                              } else {
-                                int stopId = await database.stopdao.insertStop(
-                                    Stop(
-                                        null,
-                                        name.value,
-                                        info.value,
-                                        double.parse(lat.value),
-                                        double.parse(long.value),
-                                        DateTime.now()));
-
-                                await database.tripstopdao.insertTripStop(
-                                    TripStop(selectedTripId, stopId));
-                                stopsTracker.update();
-                                // delete paramenters
-                                name.txt.text = "";
-                                lat.txt.text = "";
-                                long.txt.text = "";
-                                info.txt.text = "";
-                                name.value = "";
-                                lat.value = "";
-                                long.value = "";
-                                info.value = "";
+                                return;
                               }
-                            },
-                            child: const Text('save')),
-                      ],
-                    ),
-                  ]),
-                );
+
+                              int stopId = await database.stopdao.insertStop(
+                                  Stop(
+                                      null,
+                                      name.value,
+                                      info.value,
+                                      double.parse(lat.value),
+                                      double.parse(long.value),
+                                      DateTime.now()));
+
+                              await database.tripstopdao.insertTripStop(
+                                  TripStop(selectedTripId, stopId));
+                              stopsTracker.update();
+                              // delete paramenters
+                              name.txt.text = "";
+                              lat.txt.text = "";
+                              long.txt.text = "";
+                              info.txt.text = "";
+                              name.value = "";
+                              lat.value = "";
+                              long.value = "";
+                              info.value = "";
+                            }
+                          },
+                          child: const Text('save')),
+                    ],
+                  ),
+                ]),
+              );
               // }
             } else {
               return GestureDetector(
                   onTap: () {
                     selectedStop = stopsTracker.stops[index - 1];
                     print(selectedStop!.name);
-                    if (map) stopsTracker.reload();
 
                     // TODO FIXME
                     Navigator.of(context).push(MaterialPageRoute(
